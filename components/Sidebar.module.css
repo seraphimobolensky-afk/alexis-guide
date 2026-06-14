@@ -1,0 +1,101 @@
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  padding: 24px 12px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(0,0,0,0.05);
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.brand { padding: 0 6px; margin-bottom: 24px; }
+
+.eyebrow {
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--light-silver);
+  font-weight: 500;
+  margin-bottom: 3px;
+}
+
+.name {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--charcoal);
+}
+
+.sectionLabel {
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 500;
+  padding-left: 6px;
+  margin-bottom: 10px;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 11px;
+  text-decoration: none;
+  background: var(--bg);
+  transition: box-shadow 0.15s ease;
+}
+
+.navIcon { font-size: 14px; line-height: 1; }
+
+.navLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--light-silver);
+}
+
+.active .navLabel { color: var(--charcoal); }
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 4px;
+  margin-top: 16px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--dark-silver);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.signOut {
+  font-size: 11px;
+  color: var(--faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 0;
+  letter-spacing: .02em;
+}
+
+.signOut:hover { color: var(--mid-silver); }

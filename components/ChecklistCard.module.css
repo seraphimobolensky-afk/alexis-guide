@@ -1,0 +1,76 @@
+.cell { padding: 7px; }
+
+.card {
+  background: var(--bg);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: opacity 0.2s ease;
+}
+
+.done { opacity: 0.6; }
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.iconBox {
+  background: var(--bg);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-icon);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.badge {
+  background: var(--bg);
+  border-radius: var(--radius-pill);
+  padding: 4px 11px;
+}
+
+.badgeText {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--dark-silver);
+  letter-spacing: .06em;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--charcoal);
+  margin-bottom: 5px;
+}
+
+.tip {
+  font-size: 11px;
+  color: var(--mid-silver);
+  line-height: 1.55;
+  flex: 1;
+  margin-bottom: 14px;
+}
+
+.check {
+  background: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--dark-silver);
+  cursor: pointer;
+  align-self: flex-start;
+  transition: box-shadow 0.15s ease;
+}
+
+.checkDone { color: var(--charcoal); }

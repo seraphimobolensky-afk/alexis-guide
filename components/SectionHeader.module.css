@@ -1,0 +1,24 @@
+.header { margin-bottom: 24px; }
+
+.eyebrow {
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--light-silver);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--charcoal);
+  letter-spacing: -.01em;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--mid-silver);
+  line-height: 1.6;
+}
