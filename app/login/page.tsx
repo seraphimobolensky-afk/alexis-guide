@@ -7,16 +7,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const supabase = createClient()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    await supabase.auth.signInWithOtp({
+    setError('')
+    const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: `${location.origin}/auth/callback` },
     })
-    setSent(true)
+    if (error) {
+      setError(error.message)
+    } else {
+      setSent(true)
+    }
     setLoading(false)
   }
 
@@ -56,6 +62,7 @@ export default function LoginPage() {
             >
               {loading ? 'Sending…' : 'Send magic link'}
             </button>
+            {error && <p style={{ color: 'red', marginTop: '12px', fontSize: '14px' }}>{error}</p>}
           </form>
         )}
 
