@@ -1,15 +1,13 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { checkEmailAllowed } from '@/app/auth/actions'
 import { humanizeAuthError } from '@/lib/authErrors'
-import styles from './login.module.css'
+import styles from '../auth.module.css'
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('')
+export default function SetPasswordForm() {
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -18,17 +16,19 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
-    const { allowed, message } = await checkEmailAllowed(email)
-    if (!allowed) {
-      setError(message ?? "That email isn't on the list yet.")
-      setLoading(false)
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.')
+      return
+    }
+    if (password !== confirm) {
+      setError("Those passwords don't match.")
       return
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setLoading(true)
+    const { error } = await supabase.auth.updateUser({ password })
     if (error) {
       setError(humanizeAuthError(error.message))
       setLoading(false)
@@ -43,35 +43,22 @@ export default function LoginPage() {
     <div className={styles.page}>
       <div className={styles.card}>
         <div className={styles.header}>
-          <p className={styles.eyebrow}>A guide to living alone</p>
-          <h1 className={styles.title}>Hey Alexis</h1>
-          <p className={styles.subtitle}>Sign in to keep going.</p>
+          <p className={styles.eyebrow}>Almost there</p>
+          <h1 className={styles.title}>Set a password</h1>
+          <p className={styles.subtitle}>Pick a password so you can sign in directly next time.</p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <label className={styles.label} htmlFor="email">Email</label>
-          <div className={`${styles.inputWrap} pressed`}>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="alexis@example.com"
-              required
-              className={styles.input}
-            />
-          </div>
-
-          <label className={styles.label} htmlFor="password">Password</label>
+          <label className={styles.label} htmlFor="password">New password</label>
           <div className={`${styles.inputWrap} pressed ${styles.passwordWrap}`}>
             <input
               id="password"
               type={showPassword ? 'text' : 'password'}
-              autoComplete="current-password"
+              autoComplete="new-password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
+              minLength={8}
               className={styles.input}
             />
             <button
@@ -83,20 +70,28 @@ export default function LoginPage() {
               {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
+          <p className={styles.hint}>At least 8 characters.</p>
+
+          <label className={styles.label} htmlFor="confirm">Confirm password</label>
+          <div className={`${styles.inputWrap} pressed`}>
+            <input
+              id="confirm"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              required
+              minLength={8}
+              className={styles.input}
+            />
+          </div>
 
           <button type="submit" disabled={loading} className={`${styles.btn} raised`}>
-            {loading ? 'Signing in…' : 'Sign in'}
+            {loading ? 'Saving…' : 'Save password'}
           </button>
 
           {error && <p className={styles.error}>{error}</p>}
         </form>
-
-        <div className={styles.links}>
-          <Link href="/auth/reset" className={styles.link}>Forgot password?</Link>
-          <Link href="/auth/new" className={styles.link}>New here? Create your account</Link>
-        </div>
-
-        <p className={styles.from}>From Sera, with ♡</p>
       </div>
     </div>
   )

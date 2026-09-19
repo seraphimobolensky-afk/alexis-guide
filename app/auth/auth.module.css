@@ -65,6 +65,11 @@
   padding: 2px;
 }
 
+.passwordWrap {
+  display: flex;
+  align-items: center;
+}
+
 .input {
   width: 100%;
   background: transparent;
@@ -78,11 +83,6 @@
 }
 
 .input::placeholder { color: var(--text-muted); }
-
-.passwordWrap {
-  display: flex;
-  align-items: center;
-}
 
 .toggleVisibility {
   flex-shrink: 0;
@@ -117,6 +117,39 @@
 .btn:active { box-shadow: var(--shadow-pressed) !important; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.error {
+  font-size: 14px;
+  color: var(--danger);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.link {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+}
+
+.link:hover { color: var(--accent); }
+
 .sent {
   display: flex;
   flex-direction: column;
@@ -132,35 +165,4 @@
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
-}
-
-.error {
-  font-size: 14px;
-  color: var(--danger);
-  line-height: 1.5;
-  margin-top: 4px;
-}
-
-.links {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 20px;
-  text-align: center;
-}
-
-.link {
-  font-size: 14px;
-  color: var(--text-secondary);
-  text-decoration: none;
-}
-
-.link:hover { color: var(--accent); }
-
-.from {
-  margin-top: 32px;
-  font-size: 14px;
-  color: var(--text-muted);
-  text-align: center;
-  letter-spacing: .04em;
 }
