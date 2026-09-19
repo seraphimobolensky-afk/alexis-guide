@@ -12,6 +12,7 @@
   align-items: center;
   gap: 14px;
   padding: 18px 20px;
+  min-height: 44px;
   background: none;
   border: none;
   cursor: pointer;
@@ -25,12 +26,12 @@
   flex: 1;
   font-size: 15px;
   font-weight: 500;
-  color: var(--charcoal);
+  color: var(--text-primary);
 }
 
 .chevron {
   font-size: 20px;
-  color: var(--faint);
+  color: var(--text-muted);
   transition: transform 0.2s ease;
   display: inline-block;
   line-height: 1;
@@ -42,17 +43,17 @@
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   padding: 0 20px 20px;
-  border-top: 1px solid rgba(0,0,0,0.05);
+  border-top: 1px solid var(--border);
   padding-top: 18px;
 }
 
-@media (max-width: 600px) { .body { grid-template-columns: 1fr; } }
+@media (max-width: 639px) { .body { grid-template-columns: 1fr; } }
 
 .colLabel {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--light-silver);
+  color: var(--text-muted);
   font-weight: 500;
   margin-bottom: 12px;
 }
@@ -63,8 +64,8 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 12px;
-  color: var(--charcoal);
+  font-size: 16px;
+  color: var(--text-primary);
   line-height: 1.5;
 }
 
@@ -83,8 +84,8 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 12px;
-  color: var(--charcoal);
+  font-size: 16px;
+  color: var(--text-primary);
   line-height: 1.55;
 }
 
@@ -96,8 +97,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--dark-silver);
+  color: var(--text-secondary);
   flex-shrink: 0;
 }

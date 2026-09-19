@@ -1,10 +1,14 @@
 .page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg);
   padding: 24px;
+  padding-top: calc(24px + env(safe-area-inset-top));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  padding-left: calc(24px + env(safe-area-inset-left));
+  padding-right: calc(24px + env(safe-area-inset-right));
 }
 
 .card {
@@ -16,13 +20,17 @@
   box-shadow: var(--shadow-raised);
 }
 
+@media (max-width: 639px) {
+  .card { padding: 32px 24px; }
+}
+
 .header { margin-bottom: 32px; }
 
 .eyebrow {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--light-silver);
+  color: var(--text-muted);
   font-weight: 500;
   margin-bottom: 8px;
 }
@@ -30,25 +38,25 @@
 .title {
   font-size: 32px;
   font-weight: 500;
-  color: var(--charcoal);
+  color: var(--text-primary);
   letter-spacing: -.02em;
   margin-bottom: 8px;
 }
 
 .subtitle {
   font-size: 14px;
-  color: var(--mid-silver);
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 .form { display: flex; flex-direction: column; gap: 12px; }
 
 .label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--light-silver);
+  color: var(--text-muted);
 }
 
 .inputWrap {
@@ -62,23 +70,25 @@
   background: transparent;
   border: none;
   outline: none;
-  padding: 13px 20px;
-  font-size: 14px;
+  padding: 14px 20px;
+  min-height: 44px;
+  font-size: 16px;
   font-family: var(--font);
-  color: var(--charcoal);
+  color: var(--text-primary);
 }
 
-.input::placeholder { color: var(--faint); }
+.input::placeholder { color: var(--text-muted); }
 
 .btn {
   background: var(--bg);
   border: none;
   border-radius: var(--radius-pill);
   padding: 14px 28px;
+  min-height: 44px;
   font-size: 14px;
   font-weight: 500;
   font-family: var(--font);
-  color: var(--charcoal);
+  color: var(--text-primary);
   cursor: pointer;
   margin-top: 4px;
   transition: box-shadow 0.15s ease;
@@ -100,14 +110,14 @@
 
 .sentText {
   font-size: 14px;
-  color: var(--dark-silver);
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
 .from {
   margin-top: 32px;
-  font-size: 11px;
-  color: var(--faint);
+  font-size: 14px;
+  color: var(--text-muted);
   text-align: center;
   letter-spacing: .04em;
 }

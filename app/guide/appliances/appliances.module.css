@@ -4,7 +4,7 @@
   gap: 14px;
 }
 
-@media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 639px) { .grid { grid-template-columns: 1fr; } }
 
 .card {
   background: var(--bg);
@@ -23,15 +23,15 @@
 }
 
 .name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--charcoal);
+  color: var(--text-primary);
 }
 
 .notes {
-  font-size: 11.5px;
-  color: var(--mid-silver);
-  line-height: 1.6;
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.55;
 }
 
 .dots { display: flex; gap: 4px; flex-shrink: 0; }
@@ -45,6 +45,6 @@
 }
 
 .filled {
-  background: var(--dark-silver);
+  background: var(--text-secondary);
   box-shadow: var(--shadow-icon);
 }

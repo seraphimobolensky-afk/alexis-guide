@@ -1,12 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600&display=swap');
 
+/*
+  Breakpoints (used consistently as plain media queries — no build-time
+  custom-media plugin is configured, so @custom-media would not resolve):
+    mobile:  < 640px  (default / mobile-first base)
+    tablet:  >= 640px
+    desktop: >= 1024px
+*/
+
 :root {
+  color-scheme: light;
+
   --bg: #EBEBEB;
-  --charcoal: #323131;
-  --dark-silver: #707070;
-  --mid-silver: #b8b8b8;
-  --light-silver: #c8c8c8;
-  --faint: #d8d8d8;
+  --surface: #EBEBEB;
+  --text-primary: #2b2b2a;
+  --text-secondary: #5c5c5c;
+  --text-muted: #676767;
+  --accent: #9c4a34;
+  --border: rgba(0, 0, 0, 0.08);
 
   --shadow-raised: 6px 6px 14px rgba(13,39,80,0.15), -5px -5px 11px rgba(255,255,255,0.9);
   --shadow-raised-sm: 4px 4px 9px rgba(13,39,80,0.13), -3px -3px 7px rgba(255,255,255,0.9);
@@ -22,14 +33,80 @@
   --font: 'Avenir Next', 'Avenir', 'Nunito', system-ui, sans-serif;
 }
 
+/* Dark theme — a genuinely re-lit surface, not an inverted one: the base
+   sits near #23262b, the "raised" highlight is a faint lift toward the
+   top-left, and the shadow toward the bottom-right stays low-opacity so
+   stacked neumorphic layers don't muddy into a flat black smear. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: #23262b;
+    --surface: #23262b;
+    --text-primary: #e8e9eb;
+    --text-secondary: #a8abb0;
+    --text-muted: #94979c;
+    --accent: #e08a6f;
+    --border: rgba(255, 255, 255, 0.08);
+
+    --shadow-raised: 6px 6px 14px rgba(0,0,0,0.45), -5px -5px 11px rgba(255,255,255,0.045);
+    --shadow-raised-sm: 4px 4px 9px rgba(0,0,0,0.4), -3px -3px 7px rgba(255,255,255,0.04);
+    --shadow-pressed: inset -3px -3px 7px rgba(255,255,255,0.035), inset 3px 3px 7px rgba(0,0,0,0.5);
+    --shadow-pressed-sm: inset -2px -2px 5px rgba(255,255,255,0.03), inset 2px 2px 5px rgba(0,0,0,0.45);
+    --shadow-icon: inset 2px 2px 6px rgba(0,0,0,0.5), inset -1px -1px 3px rgba(255,255,255,0.05);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #23262b;
+  --surface: #23262b;
+  --text-primary: #e8e9eb;
+  --text-secondary: #a8abb0;
+  --text-muted: #94979c;
+  --accent: #e08a6f;
+  --border: rgba(255, 255, 255, 0.08);
+
+  --shadow-raised: 6px 6px 14px rgba(0,0,0,0.45), -5px -5px 11px rgba(255,255,255,0.045);
+  --shadow-raised-sm: 4px 4px 9px rgba(0,0,0,0.4), -3px -3px 7px rgba(255,255,255,0.04);
+  --shadow-pressed: inset -3px -3px 7px rgba(255,255,255,0.035), inset 3px 3px 7px rgba(0,0,0,0.5);
+  --shadow-pressed-sm: inset -2px -2px 5px rgba(255,255,255,0.03), inset 2px 2px 5px rgba(0,0,0,0.45);
+  --shadow-icon: inset 2px 2px 6px rgba(0,0,0,0.5), inset -1px -1px 3px rgba(255,255,255,0.05);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html, body {
   height: 100%;
   background: var(--bg);
   font-family: var(--font);
-  color: var(--charcoal);
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Any interactive form control must be >= 16px or iOS zooms the viewport on focus. */
+input, textarea, select, button {
+  font-family: inherit;
+}
+input, textarea, select {
+  font-size: 16px;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .raised        { box-shadow: var(--shadow-raised); }
@@ -40,4 +117,4 @@ html, body {
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--faint); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--text-muted); opacity: 0.4; border-radius: 99px; }

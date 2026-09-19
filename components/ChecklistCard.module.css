@@ -38,22 +38,22 @@
 }
 
 .badgeText {
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--dark-silver);
+  color: var(--text-secondary);
   letter-spacing: .06em;
 }
 
 .title {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
-  color: var(--charcoal);
+  color: var(--text-primary);
   margin-bottom: 5px;
 }
 
 .tip {
-  font-size: 11px;
-  color: var(--mid-silver);
+  font-size: 16px;
+  color: var(--text-secondary);
   line-height: 1.55;
   flex: 1;
   margin-bottom: 14px;
@@ -63,14 +63,17 @@
   background: var(--bg);
   border: none;
   border-radius: var(--radius-pill);
-  padding: 7px 14px;
-  font-size: 11px;
+  padding: 12px 18px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
   font-weight: 500;
   font-family: var(--font);
-  color: var(--dark-silver);
+  color: var(--text-secondary);
   cursor: pointer;
   align-self: flex-start;
   transition: box-shadow 0.15s ease;
 }
 
-.checkDone { color: var(--charcoal); }
+.checkDone { color: var(--text-primary); }
