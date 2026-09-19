@@ -22,3 +22,7 @@
   color: var(--text-secondary);
   line-height: 1.6;
 }
+
+.subtitle + .subtitle {
+  margin-top: 10px;
+}

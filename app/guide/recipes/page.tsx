@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { recipes } from '@/lib/content'
 import SectionHeader from '@/components/SectionHeader'
+import Bullets from '@/components/Bullets'
 import styles from './recipes.module.css'
 
 export default function RecipesPage() {
@@ -11,8 +12,7 @@ export default function RecipesPage() {
     <div>
       <SectionHeader
         eyebrow="Section 5"
-        title="Recipes"
-        subtitle="Easy meals I've learned to love. Tap one to see the full recipe."
+        title="Easy recipes that I like"
       />
       <div className={styles.list}>
         {recipes.map(r => {
@@ -29,28 +29,29 @@ export default function RecipesPage() {
               </button>
 
               {isOpen && (
-                <div className={styles.body}>
-                  <div className={styles.col}>
-                    <p className={styles.colLabel}>Ingredients</p>
-                    <ul className={styles.ingredients}>
-                      {r.ingredients.map((ing, i) => (
-                        <li key={i} className={styles.ingredient}>
-                          <span className={`${styles.bullet} pressed-icon`} />
-                          {ing}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className={styles.col}>
-                    <p className={styles.colLabel}>Steps</p>
-                    <ol className={styles.steps}>
-                      {r.steps.map((step, i) => (
-                        <li key={i} className={styles.step}>
-                          <div className={`${styles.stepNum} pressed-icon`}>{i + 1}</div>
-                          <span>{step}</span>
-                        </li>
-                      ))}
-                    </ol>
+                <div className={styles.expanded}>
+                  {r.intro && <p className={styles.intro}>{r.intro}</p>}
+                  <div className={styles.body}>
+                    <div className={styles.col}>
+                      <p className={styles.colLabel}>Ingredients</p>
+                      <Bullets items={r.ingredients} />
+                    </div>
+                    <div className={styles.col}>
+                      <p className={styles.colLabel}>Steps</p>
+                      <ol className={styles.steps}>
+                        {r.steps.map((step, i) => (
+                          <li key={i} className={styles.step}>
+                            <div className={`${styles.stepNum} pressed-icon`}>{i + 1}</div>
+                            <div className={styles.stepBody}>
+                              <p className={styles.stepText}>{step.text}</p>
+                              {step.children && step.children.length > 0 && (
+                                <Bullets items={step.children} level={1} />
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
                   </div>
                 </div>
               )}

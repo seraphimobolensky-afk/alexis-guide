@@ -1,10 +1,8 @@
 .grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 14px;
 }
-
-@media (max-width: 639px) { .grid { grid-template-columns: 1fr; } }
 
 .card {
   background: var(--bg);
@@ -20,21 +18,29 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
 }
 
-.notes {
-  font-size: 16px;
+.use {
+  font-size: 14px;
+  font-style: italic;
   color: var(--text-secondary);
-  line-height: 1.55;
 }
 
-.dots { display: flex; gap: 4px; flex-shrink: 0; }
+.necessity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.dots { display: flex; gap: 4px; }
 
 .dot {
   width: 8px;
@@ -47,4 +53,10 @@
 .filled {
   background: var(--text-secondary);
   box-shadow: var(--shadow-icon);
+}
+
+.necessityText {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
 }

@@ -67,3 +67,46 @@ A running record of what changed in each phase of work, kept so progress can be 
 **Post-deploy note (login troubleshooting):** while testing staging login after this phase, a magic-link email appeared to redirect to production. Root cause was not a bug — Supabase magic-link emails all share the same sender/subject, so Gmail threads old and new ones together, and an old email (requested before staging existed) was clicked instead of a fresh one. That old link correctly went to production, since that's what was requested at the time. Fix was simply requesting a fresh link and using the newest message in the thread. Worth remembering for future login testing: always check the email timestamp, or archive old magic-link emails before testing.
 
 **Status:** User confirmed staging login and Phase 1 changes look good end-to-end.
+
+---
+
+## Phase 2 — Real content transcription
+**Date:** 2026-09-19
+
+**What changed:**
+- Extracted the source PDF (`../A guide to living alone.pdf`, one folder up from the repo) with PyMuPDF, since `pdftotext` (poppler) isn't installed on this machine and there's no Homebrew to add it. PyMuPDF is a self-contained Python library with no system dependency and gave the same reading-order text plus per-line position/font data, which was used to reconstruct the exact nested-bullet hierarchy. Confirmed the PDF has no images — it's text-only, so nothing was missed to a non-text element.
+- Redesigned the types in `lib/content.ts`: new `Bullet { text, children? }` type supporting arbitrary nesting (used at 3 levels deep in several places — e.g. the laundry cleaning task, the Sponges material row, the Coffee machine appliance, "Be active" in Life balance). `CleaningTask` now holds `bullets: Bullet[]` instead of one summarized `tip` string, and `frequency` is now her exact phrase instead of a normalized category. `Appliance` gained a `use` field (previously dropped) and `necessity` became a string to support ranges like "3-5". `Material` and grocery/roommate/life/uni tips all moved from flat strings to `Bullet[]`.
+- Transcribed all seven numbered sections plus Academic tips, replacing every previously-summarized paraphrase with Sera's actual wording. This restored content that had been silently dropped by the earlier summary: 6 missing appliances (Ice trays, TV, Ironing board & iron, Cheap monitor on your desk, Beard trimmer, Safety razor) plus "Bowls" split back out from "Big bowl", a missing material ("Glass cleaner (optional)"), a missing recipe ("Boiled eggs on toast"), the `use` column for every appliance, and the Coffee machine's full nested Price-wise/Taste-wise/Ease-of-use breakdown (previously one paraphrased sentence).
+- Added the opening letter ("Dear Alexis...") as a new first section, key `welcome`, label "Start here" — added to the `sections` nav array. Added the closing note ("I'm super excited for you...") to the bottom of the Academic tips (Uni) page, since that's the last page in both the app's nav order and the PDF's own reading order.
+- Replaced every section's invented one-line subtitle with the actual PDF intro paragraph for that section (or removed the subtitle where the PDF has none — Appliances, Recipes). `SectionHeader` now accepts `subtitle` as a string or string array to support multi-paragraph intros.
+- Updated `TipList` and `ChecklistCard` to render `Bullet[]` with nested children; built a new shared `Bullets` component (recursive, indented, used across materials, appliances, recipes, and the tip-list pages) for consistent nested rendering.
+- Updated the materials, appliances, recipes, groceries, roommates, life, and uni pages to use the new nested content and render it with clear visual hierarchy (indentation, reduced text weight per depth, all touch targets/type sizes still meeting Phase 1's minimums).
+- Root (`/`) and the auth callback now redirect to `/guide/welcome` instead of `/guide/cleaning`, since the letter is the new intended landing page.
+- Applied only the fixes explicitly allowed: spelling (e.g. "gilette" → "Gillette", "chords" → "cords", "species" → "spices"), grammar (e.g. subject-verb agreement fixes, a missing article), capitalisation of headings and proper nouns (e.g. "Ilkhom", "Pfadi", "Instagram", "Black Friday"), and cleanup of PDF-extraction artifacts (stray zero-width spaces after every bullet marker). Every other word, joke, and aside — including profanity and slang — was left exactly as written. Full list with one-word reasons per change in `CONTENT-REVIEW.md`.
+- Wrote `CONTENT-REVIEW.md` at the repo root: source text vs. app text side by side for every section, the full change log, one flagged inconsistency in the PDF itself (Bolognese mentions wine in a step but not in its ingredients list — left as-is rather than invented), and a list of what in the app has no PDF source (icons/emoji, nav short-labels, small structural UI eyebrows like "Bonus"/"Start here").
+- Verified with `npm run build` (passes) and `npm run lint` (passes — also fixed two pre-existing/incidental lint issues: a `let` that should've been `const` in the cleaning page, and a `setState`-in-effect pattern in `ThemeToggle` from Phase 1, now justified with a comment since it's reading a DOM attribute the pre-paint script already set).
+- Did **not** visually verify the new nested-bullet rendering in an actual browser — Chrome browser tools remain unavailable this session. Verified via build success, lint, and direct content spot-checks (grepped `lib/content.ts` for every claimed fix and every preserved joke/slang line to confirm the review doc matches the actual code). A real visual pass on staging is still recommended, especially for the deep 3-level nesting on a phone screen.
+
+**Files touched:**
+- `lib/content.ts` (full rewrite)
+- `components/Bullets.tsx` (new), `components/Bullets.module.css` (new)
+- `components/TipList.tsx`, `components/TipList.module.css`
+- `components/ChecklistCard.tsx`, `components/ChecklistCard.module.css`
+- `components/SectionHeader.tsx`, `components/SectionHeader.module.css`
+- `components/ThemeToggle.tsx` (lint fix only)
+- `app/guide/welcome/page.tsx` (new), `app/guide/welcome/welcome.module.css` (new)
+- `app/guide/cleaning/page.tsx`, `app/guide/cleaning/cleaning.module.css`
+- `app/guide/materials/page.tsx`, `app/guide/materials/materials.module.css`
+- `app/guide/appliances/page.tsx`, `app/guide/appliances/appliances.module.css`
+- `app/guide/groceries/page.tsx` (removed now-unused `groceries.module.css`)
+- `app/guide/recipes/page.tsx`, `app/guide/recipes/recipes.module.css`
+- `app/guide/roommates/page.tsx`
+- `app/guide/life/page.tsx`
+- `app/guide/uni/page.tsx`, `app/guide/uni/uni.module.css` (new)
+- `app/page.tsx`, `app/auth/callback/route.ts` (redirect target updated to `/guide/welcome`)
+- `CONTENT-REVIEW.md` (new)
+
+**Anything to click:**
+- Nothing required in Vercel or Supabase — content/component-only, no schema or env changes.
+- Recommended: read through `CONTENT-REVIEW.md` to confirm nothing was invented or lost, and flag anything I should reconsider (especially the "Swisher" vs. "Swiffer" naming question and the Bolognese wine inconsistency, both called out in that doc).
+- Recommended: once Chrome browser tools are available, do a visual pass on staging — check the nested bullets render with clear hierarchy on a phone screen, especially the 3-level-deep ones (laundry, coffee machine, "Be active").

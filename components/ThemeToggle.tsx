@@ -8,7 +8,10 @@ export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>('light')
 
   useEffect(() => {
+    // Reads the attribute the pre-paint script in app/layout.tsx already set,
+    // so the icon matches the real theme instead of the SSR default.
     const current = document.documentElement.getAttribute('data-theme')
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(current === 'dark' ? 'dark' : 'light')
   }, [])
 

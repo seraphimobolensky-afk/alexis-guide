@@ -1,16 +1,24 @@
-import { uniTips } from '@/lib/content'
+import { uniTips, uniIntro, closingNote } from '@/lib/content'
 import SectionHeader from '@/components/SectionHeader'
 import TipList from '@/components/TipList'
+import styles from './uni.module.css'
 
 export default function UniPage() {
   return (
     <div>
       <SectionHeader
-        eyebrow="Section 8"
-        title="Uni tips"
-        subtitle="Uni is different from high school in a lot of ways. Here's what I wish I'd known."
+        eyebrow="Bonus"
+        title="Academic tips"
+        subtitle={uniIntro}
       />
       <TipList tips={uniTips} />
+
+      <div className={`${styles.closing} raised`}>
+        <p className={styles.closingEyebrow}>Final note</p>
+        {closingNote.paragraphs.map((p, i) => (
+          <p key={i} className={styles.closingText}>{p}</p>
+        ))}
+      </div>
     </div>
   )
 }

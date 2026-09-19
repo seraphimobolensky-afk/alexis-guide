@@ -1,4 +1,4 @@
-import { lifeBalanceTips } from '@/lib/content'
+import { lifeBalanceTips, lifeIntro } from '@/lib/content'
 import SectionHeader from '@/components/SectionHeader'
 import TipList from '@/components/TipList'
 
@@ -8,7 +8,7 @@ export default function LifePage() {
       <SectionHeader
         eyebrow="Section 7"
         title="Life balance"
-        subtitle="The most important section. Living abroad by yourself can be extremely fun — and also, at times, lonely. These tips will help."
+        subtitle={lifeIntro}
       />
       <TipList tips={lifeBalanceTips} />
     </div>

@@ -1,6 +1,8 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { toggleChecklist } from '@/app/actions'
+import type { Bullet } from '@/lib/content'
+import Bullets from './Bullets'
 import styles from './ChecklistCard.module.css'
 
 interface Props {
@@ -8,11 +10,11 @@ interface Props {
   icon: string
   title: string
   frequency: string
-  tip: string
+  bullets: Bullet[]
   initialChecked: boolean
 }
 
-export default function ChecklistCard({ taskKey, icon, title, frequency, tip, initialChecked }: Props) {
+export default function ChecklistCard({ taskKey, icon, title, frequency, bullets, initialChecked }: Props) {
   const [checked, setChecked] = useState(initialChecked)
   const [pending, startTransition] = useTransition()
 
@@ -27,12 +29,15 @@ export default function ChecklistCard({ taskKey, icon, title, frequency, tip, in
       <div className={`${styles.card} raised ${checked ? styles.done : ''}`}>
         <div className={styles.top}>
           <div className={`${styles.iconBox} pressed-icon`}>{icon}</div>
-          <div className={`${styles.badge} pressed-sm`}>
-            <span className={styles.badgeText}>{frequency.toUpperCase()}</span>
-          </div>
+          <h3 className={styles.title}>{title}</h3>
         </div>
-        <h3 className={styles.title}>{title}</h3>
-        <p className={styles.tip}>{tip}</p>
+        <div className={`${styles.frequency} pressed-sm`}>
+          <span className={styles.frequencyLabel}>Frequency</span>
+          <span className={styles.frequencyText}>{frequency}</span>
+        </div>
+        <div className={styles.tips}>
+          <Bullets items={bullets} />
+        </div>
         <button
           onClick={toggle}
           disabled={pending}

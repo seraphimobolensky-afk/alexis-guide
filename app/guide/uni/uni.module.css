@@ -1,0 +1,25 @@
+.closing {
+  background: var(--bg);
+  border-radius: var(--radius-card);
+  padding: 24px 20px;
+  margin-top: 20px;
+}
+
+.closingEyebrow {
+  font-size: 12px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.closingText {
+  font-size: 16px;
+  color: var(--text-primary);
+  line-height: 1.55;
+}
+
+.closingText + .closingText {
+  margin-top: 10px;
+}

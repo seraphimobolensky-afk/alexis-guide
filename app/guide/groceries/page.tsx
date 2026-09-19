@@ -1,6 +1,6 @@
-import { groceryTips } from '@/lib/content'
+import { groceryTips, groceriesIntro } from '@/lib/content'
 import SectionHeader from '@/components/SectionHeader'
-import styles from './groceries.module.css'
+import TipList from '@/components/TipList'
 
 export default function GroceriesPage() {
   return (
@@ -8,16 +8,9 @@ export default function GroceriesPage() {
       <SectionHeader
         eyebrow="Section 4"
         title="Planning groceries"
-        subtitle="My least favourite part of adulting. These tips make it a lot less painful."
+        subtitle={groceriesIntro}
       />
-      <div className={styles.list}>
-        {groceryTips.map((tip, i) => (
-          <div key={i} className={`${styles.tip} raised`}>
-            <div className={`${styles.num} pressed-icon`}>{i + 1}</div>
-            <p className={styles.text}>{tip}</p>
-          </div>
-        ))}
-      </div>
+      <TipList tips={groceryTips} />
     </div>
   )
 }

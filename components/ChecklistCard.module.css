@@ -1,13 +1,12 @@
-.cell { padding: 7px; }
+.cell { width: 100%; }
 
 .card {
   background: var(--bg);
   border-radius: var(--radius-card);
-  padding: 16px;
-  height: 100%;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 14px;
   transition: opacity 0.2s ease;
 }
 
@@ -15,49 +14,52 @@
 
 .top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  gap: 12px;
 }
 
 .iconBox {
   background: var(--bg);
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-icon);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-}
-
-.badge {
-  background: var(--bg);
-  border-radius: var(--radius-pill);
-  padding: 4px 11px;
-}
-
-.badgeText {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  letter-spacing: .06em;
+  font-size: 20px;
+  flex-shrink: 0;
 }
 
 .title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 5px;
 }
 
-.tip {
-  font-size: 16px;
-  color: var(--text-secondary);
-  line-height: 1.55;
-  flex: 1;
-  margin-bottom: 14px;
+.frequency {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
+
+.frequencyLabel {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.frequencyText {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.tips { }
 
 .check {
   background: var(--bg);
@@ -67,6 +69,7 @@
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   font-size: 14px;
   font-weight: 500;
   font-family: var(--font);
