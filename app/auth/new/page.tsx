@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { checkEmailAllowed } from '@/app/auth/actions'
 import { humanizeAuthError } from '@/lib/authErrors'
+import AuthShell from '@/components/AuthShell'
+import AuthSubmitButton from '@/components/AuthSubmitButton'
 import styles from '../auth.module.css'
 
 export default function CreateAccountPage() {
@@ -42,47 +44,45 @@ export default function CreateAccountPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={styles.header}>
-          <p className={styles.eyebrow}>Create your account</p>
-          <h1 className={styles.title}>Welcome</h1>
-          <p className={styles.subtitle}>We’ll send you a link to get started and set a password.</p>
-        </div>
-
-        {sent ? (
-          <div className={styles.sent}>
-            <span className={styles.sentIcon}>✉️</span>
-            <p className={styles.sentText}>Check your inbox — a link is on its way to <strong>{email}</strong></p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <label className={styles.label} htmlFor="email">Email</label>
-            <div className={`${styles.inputWrap} pressed`}>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="alexis@example.com"
-                required
-                className={styles.input}
-              />
-            </div>
-
-            <button type="submit" disabled={loading} className={`${styles.btn} raised`}>
-              {loading ? 'Sending…' : 'Send link'}
-            </button>
-
-            {error && <p className={styles.error}>{error}</p>}
-          </form>
-        )}
-
-        <div className={styles.links}>
-          <Link href="/login" className={styles.link}>Already have an account? Sign in</Link>
-        </div>
+    <AuthShell warpText="Welcome">
+      <div className={styles.header}>
+        <p className={styles.eyebrow}>Create your account</p>
+        <h1 className={styles.title}>Welcome</h1>
+        <p className={styles.subtitle}>We’ll send you a link to get started and set a password.</p>
       </div>
-    </div>
+
+      {sent ? (
+        <div className={styles.sent}>
+          <span className={styles.sentIcon}>✉️</span>
+          <p className={styles.sentText}>Check your inbox — a link is on its way to <strong>{email}</strong></p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <label className={styles.label} htmlFor="email">Email</label>
+          <div className={`${styles.inputWrap} pressed`}>
+            <input
+              id="email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="alexis@example.com"
+              required
+              className={styles.input}
+            />
+          </div>
+
+          <AuthSubmitButton disabled={loading}>
+            {loading ? 'Sending…' : 'Send link'}
+          </AuthSubmitButton>
+
+          {error && <p className={styles.error}>{error}</p>}
+        </form>
+      )}
+
+      <div className={styles.links}>
+        <Link href="/login" className={styles.link}>Already have an account? Sign in</Link>
+      </div>
+    </AuthShell>
   )
 }

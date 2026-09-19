@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { checkEmailAllowed } from '@/app/auth/actions'
 import { humanizeAuthError } from '@/lib/authErrors'
+import AuthShell from '@/components/AuthShell'
+import AuthSubmitButton from '@/components/AuthSubmitButton'
 import styles from './login.module.css'
 
 export default function LoginPage() {
@@ -40,64 +42,62 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.card}>
-        <div className={styles.header}>
-          <p className={styles.eyebrow}>A guide to living alone</p>
-          <h1 className={styles.title}>Hey Alexis</h1>
-          <p className={styles.subtitle}>Sign in to keep going.</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <label className={styles.label} htmlFor="email">Email</label>
-          <div className={`${styles.inputWrap} pressed`}>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="alexis@example.com"
-              required
-              className={styles.input}
-            />
-          </div>
-
-          <label className={styles.label} htmlFor="password">Password</label>
-          <div className={`${styles.inputWrap} pressed ${styles.passwordWrap}`}>
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="current-password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              className={styles.input}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(s => !s)}
-              className={styles.toggleVisibility}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-            >
-              {showPassword ? 'Hide' : 'Show'}
-            </button>
-          </div>
-
-          <button type="submit" disabled={loading} className={`${styles.btn} raised`}>
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-
-          {error && <p className={styles.error}>{error}</p>}
-        </form>
-
-        <div className={styles.links}>
-          <Link href="/auth/reset" className={styles.link}>Forgot password?</Link>
-          <Link href="/auth/new" className={styles.link}>New here? Create your account</Link>
-        </div>
-
-        <p className={styles.from}>From Sera, with ♡</p>
+    <AuthShell warpText="Hi Lesch! Are you ready?">
+      <div className={styles.header}>
+        <p className={styles.eyebrow}>A guide to living alone</p>
+        <h1 className={styles.title}>Hey Alexis</h1>
+        <p className={styles.subtitle}>Sign in to keep going.</p>
       </div>
-    </div>
+
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <label className={styles.label} htmlFor="email">Email</label>
+        <div className={`${styles.inputWrap} pressed`}>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="alexis@example.com"
+            required
+            className={styles.input}
+          />
+        </div>
+
+        <label className={styles.label} htmlFor="password">Password</label>
+        <div className={`${styles.inputWrap} pressed ${styles.passwordWrap}`}>
+          <input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            className={styles.input}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(s => !s)}
+            className={styles.toggleVisibility}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
+        </div>
+
+        <AuthSubmitButton disabled={loading}>
+          {loading ? 'Signing in…' : 'Sign in'}
+        </AuthSubmitButton>
+
+        {error && <p className={styles.error}>{error}</p>}
+      </form>
+
+      <div className={styles.links}>
+        <Link href="/auth/reset" className={styles.link}>Forgot password?</Link>
+        <Link href="/auth/new" className={styles.link}>New here? Create your account</Link>
+      </div>
+
+      <p className={styles.from}>From Sera, with ♡</p>
+    </AuthShell>
   )
 }

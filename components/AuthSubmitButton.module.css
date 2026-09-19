@@ -1,0 +1,29 @@
+.wrap {
+  margin-top: 4px;
+}
+
+.hidden {
+  display: none;
+}
+
+.fallback {
+  width: 100%;
+  background: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 14px 28px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+}
+
+.fallback:active { box-shadow: var(--shadow-pressed) !important; }
+.fallback:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.button {
+  width: 100%;
+}

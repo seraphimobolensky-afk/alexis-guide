@@ -1,29 +1,3 @@
-.page {
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg);
-  padding: 24px;
-  padding-top: calc(24px + env(safe-area-inset-top));
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
-  padding-left: calc(24px + env(safe-area-inset-left));
-  padding-right: calc(24px + env(safe-area-inset-right));
-}
-
-.card {
-  background: var(--bg);
-  border-radius: 24px;
-  padding: 40px 36px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: var(--shadow-raised);
-}
-
-@media (max-width: 639px) {
-  .card { padding: 32px 24px; }
-}
-
 .header { margin-bottom: 32px; }
 
 .eyebrow {
@@ -98,41 +72,6 @@
 }
 
 .toggleVisibility:hover { color: var(--accent); }
-
-.btn {
-  background: var(--bg);
-  border: none;
-  border-radius: var(--radius-pill);
-  padding: 14px 28px;
-  min-height: 44px;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: var(--font);
-  color: var(--text-primary);
-  cursor: pointer;
-  margin-top: 4px;
-  transition: box-shadow 0.15s ease;
-}
-
-.btn:active { box-shadow: var(--shadow-pressed) !important; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.sent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
-  padding: 24px 0;
-}
-
-.sentIcon { font-size: 32px; }
-
-.sentText {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-}
 
 .error {
   font-size: 14px;

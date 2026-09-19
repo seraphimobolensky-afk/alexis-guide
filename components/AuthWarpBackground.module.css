@@ -1,0 +1,35 @@
+.background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.gradient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 90% at 50% 8%,
+    color-mix(in srgb, var(--accent) 16%, var(--bg)) 0%,
+    var(--bg) 62%
+  );
+}
+
+.fallbackText {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+  font-size: clamp(2rem, 8vw, 4.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  color: var(--text-primary);
+}
+
+.canvasLayer {
+  min-height: 0 !important;
+}
