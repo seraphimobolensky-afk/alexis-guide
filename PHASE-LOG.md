@@ -63,3 +63,7 @@ A running record of what changed in each phase of work, kept so progress can be 
 **Anything to click:**
 - Nothing required in Vercel or Supabase for this phase — it's CSS/component-only.
 - Recommended: once Chrome browser tools are available (`/chrome`), do a real visual pass on the staging preview — check the theme toggle in both themes, and resize down to a phone width to confirm the sidebar stacks cleanly.
+
+**Post-deploy note (login troubleshooting):** while testing staging login after this phase, a magic-link email appeared to redirect to production. Root cause was not a bug — Supabase magic-link emails all share the same sender/subject, so Gmail threads old and new ones together, and an old email (requested before staging existed) was clicked instead of a fresh one. That old link correctly went to production, since that's what was requested at the time. Fix was simply requesting a fresh link and using the newest message in the thread. Worth remembering for future login testing: always check the email timestamp, or archive old magic-link emails before testing.
+
+**Status:** User confirmed staging login and Phase 1 changes look good end-to-end.
