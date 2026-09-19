@@ -24,6 +24,8 @@ A running record of what changed in each phase of work, kept so progress can be 
 - `PHASE-LOG.md` (new)
 
 **Anything to click:**
-- **Vercel:** none required by this phase alone, but see the setup checklist given alongside this log for one-time dashboard steps to fully wire up the `redesign` branch as a preview environment.
-- **Supabase:** none required by this phase.
+- **Vercel:** confirmed `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` are enabled for both Production and Preview environments; confirmed Production Branch is `main`. Stable staging URL: `https://alexis-guide-git-redesign-seraphim-s-projects2.vercel.app`.
+- **Supabase:** added `https://alexis-guide-git-redesign-seraphim-s-projects2.vercel.app/auth/callback` to Authentication → URL Configuration → Redirect URLs, so magic-link login works on the staging preview. Confirmed working end-to-end.
 - **Note:** `npm audit` reported 9 vulnerabilities (2 moderate, 6 high, 1 critical) in dependencies — not fixed in this phase since it wasn't in scope; flagging for a future phase.
+
+**Status:** Staging environment fully working and verified (login tested successfully on the preview URL). Phase 0 complete.
