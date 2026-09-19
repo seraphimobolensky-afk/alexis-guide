@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import Sidebar from '@/components/Sidebar'
-import ThemeToggle from '@/components/ThemeToggle'
+import GuideNav from '@/components/GuideNav'
 import styles from './layout.module.css'
 
 export default async function GuideLayout({ children }: { children: React.ReactNode }) {
@@ -14,11 +13,8 @@ export default async function GuideLayout({ children }: { children: React.ReactN
 
   return (
     <div className={styles.shell}>
-      <Sidebar />
+      <GuideNav />
       <main className={styles.main}>{children}</main>
-      <div className={styles.themeToggleSlot}>
-        <ThemeToggle />
-      </div>
     </div>
   )
 }

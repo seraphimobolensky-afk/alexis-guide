@@ -142,3 +142,40 @@ A running record of what changed in each phase of work, kept so progress can be 
 **Anything to click:**
 - Nothing required in Vercel or Supabase — component/UI-only.
 - Recommended: once Chrome browser tools are available, check the actual feel of the expand animation on staging (does it feel "weighted" as intended, does the chevron rotation look right, does turning on "reduce motion" in system settings actually kill the animation), and try the "Expand all"/"Collapse all" control on a long section like Appliances.
+
+---
+
+## Phase 4 — React Bits CardNav replaces the sidebar
+**Date:** 2026-09-19
+
+**What changed:**
+- Fetched `https://reactbits.dev/r/CardNav-TS-CSS.json` directly with `curl` (not `npx shadcn init`, which would've pulled in the Tailwind toolchain) and parsed the registry JSON to pull out the exact `CardNav.tsx`/`CardNav.css` source before writing anything. Installed the two declared dependencies, `gsap` and `react-icons`.
+- **Read the source and found several things worth flagging before wiring it up:**
+  - The component is built to be an absolutely-positioned floating overlay (`position: absolute; top: 2em; left: 50%`), not a normal in-flow sticky header — it's meant to sit on top of a hero image, not act as a page header. Changed to `position: sticky; top: 0` and made it a normal block in the layout flow, matching what was actually asked for.
+  - Its expanded-height calculation only measures real content height on mobile (`max-width: 768px`); on desktop it always returns a **hardcoded `260`**, regardless of how much content is actually in the panel — the same kind of guess Phase 3 explicitly told us to avoid. Fixed it to always measure the real content height, on every screen size.
+  - The logo prop only accepts an image URL (`<img src={logo}>`) with no link wrapper at all — not clickable, and this app has no logo image asset. Added an optional text-based `brandLabel` alternative and wrapped it in a Next.js `Link` to `/guide/welcome`, as the phase asked for.
+  - Nav links are plain `<a href>` tags, which would force full page reloads in a Next.js app; swapped for `next/link`.
+  - There's no click-outside-to-close, no Escape-to-close, and no `prefers-reduced-motion` handling at all — all three were required by this phase's spec and had to be added from scratch, not just reconfigured.
+  - The hamburger trigger is a `<div role="button">` rather than a real `<button>`; changed it to a real button to match the accessibility bar the rest of the app (Phase 3) already holds itself to.
+  - Colors are hardcoded throughout (`white`, `#111`, `#000`) both in the CSS and as component prop defaults; replaced every one with the Phase 1 tokens (`--bg`, `--text-primary`, `--text-secondary`, `--text-muted`, `--accent`, `--border`, `--shadow-*`), so it now follows system/manual dark mode like everything else.
+  - It ships a decorative, non-functional "Get Started" CTA button with no `href` or handler. Removed it — the phase's actual requirement (sign-out + theme toggle) needed a real slot instead, so I added an `actions` prop that renders as its own row at the bottom of the expanded panel, and used it for that.
+  - Kept the core GSAP height/opacity timeline approach and the overall card-grid structure, since that's the actual "feel" being asked for — this was an adaptation, not a rewrite from scratch.
+- Deleted `components/Sidebar.tsx` and `components/Sidebar.module.css`. There is now exactly one navigation, `GuideNav` (a new client wrapper around `CardNav` that owns the sign-out logic moved over from the old sidebar), used by `app/guide/layout.tsx` on every screen size.
+- Grouped the 8 real sections plus 2 not-yet-built ones into the 3 required card groups (`lib/navGroups.ts`): "Keep the place running" (cleaning, materials, appliances, habits), "Food" (groceries, grocery-list, recipes), "Life in London" (roommates, life, uni). `habits` and `grocery-list` are marked `disabled: true` in that config — they render as visibly muted, non-navigating placeholders with a small "Soon" tag rather than a link to a route that doesn't exist yet, so the app can't crash on them and it's a one-line flip (`disabled: false` + a real `href`) to enable each once Phases 8/9 ship.
+- Mobile handling: hamburger button is a 44×44px real tap target: the expanded panel has `max-height: calc(100dvh - 24px - env(safe-area-inset-top))` with `overflow-y: auto` on the content area, so it scrolls instead of overflowing on a short screen; clicking/tapping outside the nav closes it; Escape closes it; and when `prefers-reduced-motion: reduce` is set, the GSAP timeline runs with duration 0 (an instant show/hide) instead of animating.
+- Restructured `app/guide/layout.module.css`: the old fixed flex-row shell (sidebar + scrollable main) is gone, replaced with a single flex-column shell — `GuideNav` on top (sticky), `<main>` below it, centered at a 720px comfortable reading width with the existing fluid mobile padding and safe-area insets from Phase 1.
+- Verified with `npm run build` (passes) and `npm run lint` (passes — one pre-existing-pattern warning from Next.js about the registry component's optional `<img>` fallback path, which isn't actually exercised since this app uses the text `brandLabel` instead of an image logo). Since the guide layout redirects unauthenticated users before rendering children, and there's no way to complete the magic-link flow from this environment, temporarily bypassed the auth redirect behind a one-off env var to confirm `GuideNav`/`CardNav` actually server-renders without error — verified the markup for both nav groups and the disabled placeholders came through correctly, then fully reverted the bypass (confirmed via `git diff` showing a clean revert) before committing.
+- Did **not** visually verify the GSAP expand animation, the click-outside/Escape behavior, or the reduced-motion path in an actual browser — Chrome browser tools are still unavailable this session. This one in particular really needs a real look on staging, since GSAP/DOM-measurement behavior (especially `calculateHeight`'s temporary style-swap trick) is exactly the kind of thing that can look right in code and still be off in practice.
+
+**Files touched:**
+- `components/CardNav.tsx` (new — adapted from the React Bits registry), `components/CardNav.css` (new — adapted)
+- `components/GuideNav.tsx` (new), `components/GuideNav.module.css` (new)
+- `lib/navGroups.ts` (new)
+- `components/Sidebar.tsx` (deleted), `components/Sidebar.module.css` (deleted)
+- `app/guide/layout.tsx`, `app/guide/layout.module.css`
+- `package.json` / `package-lock.json` (added `gsap`, `react-icons`)
+
+**Anything to click:**
+- Nothing required in Vercel or Supabase — component/dependency-only change.
+- Recommended: once Chrome browser tools are available, actually open the nav on staging — check the expand/collapse animation feel, that tapping outside and pressing Escape both close it, that it scrolls instead of clipping on a short/landscape phone screen, and that turning on "reduce motion" in system settings makes it snap open/closed instantly instead of animating.
+- Worth deciding before Phases 8/9: the exact route paths I guessed for the not-yet-built sections — `/guide/habits` and `/guide/grocery-list` — since those are what's baked into `lib/navGroups.ts` now.
