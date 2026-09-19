@@ -110,3 +110,35 @@ A running record of what changed in each phase of work, kept so progress can be 
 - Nothing required in Vercel or Supabase — content/component-only, no schema or env changes.
 - Recommended: read through `CONTENT-REVIEW.md` to confirm nothing was invented or lost, and flag anything I should reconsider (especially the "Swisher" vs. "Swiffer" naming question and the Bolognese wine inconsistency, both called out in that doc).
 - Recommended: once Chrome browser tools are available, do a visual pass on staging — check the nested bullets render with clear hierarchy on a phone screen, especially the 3-level-deep ones (laundry, coffee machine, "Be active").
+
+---
+
+## Phase 3 — Collapsible cards
+**Date:** 2026-09-19
+
+**What changed:**
+- Built a reusable `ExpandableCard` component (`components/ExpandableCard.tsx` + `.module.css`): collapsed state shows only icon, title, and an optional small meta chip; the whole header is a real `<button>` with `aria-expanded`/`aria-controls` (via `useId()`), a focus-visible ring (inherited from the global `:focus-visible` rule), and a chevron that rotates 90° on open. The content region animates open/closed with `grid-template-rows: 0fr → 1fr` (no hardcoded max-height, so it handles the very different content lengths from Phase 2 correctly) using a springy `cubic-bezier(0.34, 1.56, 0.64, 1)` curve over 280ms; a `persistent` slot renders content that stays visible regardless of open state. A `@media (prefers-reduced-motion: reduce)` block removes both the height and chevron transitions entirely, so reduced-motion users get an instant show/hide with no animation.
+- Built `lib/useExpandableGroup.ts`, a small hook that tracks open/closed state per id in a group, so any number of cards on a page can be open at once, independently, for as long as you stay on that page. Built `ExpandAllControl` (`components/ExpandAllControl.tsx`), a small pill button that flips between "Expand all"/"Collapse all" based on whether every card in the group is open.
+- Applied `ExpandableCard` to cleaning materials, appliances, and roommates/life-balance/uni-tips/groceries (the last four via `TipList`, updated to render each top-level tip as an `ExpandableCard` when it has sub-bullets, or as a plain static row when it doesn't — several tips are single sentences with nothing to expand, so those don't get a non-functional chevron).
+- Replaced the bespoke single-open accordion on the Recipes page with `ExpandableCard`. This is a genuine behavior fix, not just a refactor: the old accordion only allowed **one** recipe open at a time (`useState<string | null>`); now every recipe can be open independently, per the spec.
+- For cleaning tasks: `ChecklistCard` now renders through `ExpandableCard`, with the tip bullets as the collapsible content and the "Mark done" button passed via the `persistent` slot, so it's visible and tappable whether the card is expanded or not — ticking things off stays fast. Since the cleaning page needs both this per-card state and its server-fetched Supabase completions, added a small client wrapper (`components/CleaningList.tsx`) that the (still server-side, still async) cleaning page renders into.
+- Added the "Expand all / Collapse all" control to every section that ended up with more than 4 cards: cleaning (11), materials (14), appliances (21), recipes (7), groceries (7 expandable), roommates (7 expandable), life balance (12), uni tips (5). In practice every section qualifies with the current content.
+- Necessity rating on the Appliances page moved into the collapsed-state meta chip (small dot indicator + "N/5" text) instead of always-visible; the `use` line moved into the expanded content, since collapsed state is meant to show only icon/title/meta.
+- Verified with `npm run build` (passes) and `npm run lint` (passes, no new issues). Smoke-tested every route with the dev server running — all `/guide/*` pages correctly redirect to `/login` when unauthenticated with no server errors, confirming the new client components compile and mount cleanly.
+- Did **not** visually verify the animation itself (the spring easing, the chevron rotation, the reduced-motion behavior) in an actual browser — Chrome browser tools are still unavailable this session. This is worth a real look before considering the phase fully done, especially the reduced-motion path, which can't be verified by a build/lint pass alone.
+
+**Files touched:**
+- `components/ExpandableCard.tsx` (new), `components/ExpandableCard.module.css` (new)
+- `components/ExpandAllControl.tsx` (new), `components/ExpandAllControl.module.css` (new)
+- `lib/useExpandableGroup.ts` (new)
+- `components/CleaningList.tsx` (new)
+- `components/ChecklistCard.tsx`, `components/ChecklistCard.module.css`
+- `components/TipList.tsx`, `components/TipList.module.css`
+- `app/guide/cleaning/page.tsx`
+- `app/guide/materials/page.tsx`, `app/guide/materials/materials.module.css`
+- `app/guide/appliances/page.tsx`, `app/guide/appliances/appliances.module.css`
+- `app/guide/recipes/page.tsx`, `app/guide/recipes/recipes.module.css`
+
+**Anything to click:**
+- Nothing required in Vercel or Supabase — component/UI-only.
+- Recommended: once Chrome browser tools are available, check the actual feel of the expand animation on staging (does it feel "weighted" as intended, does the chevron rotation look right, does turning on "reduce motion" in system settings actually kill the animation), and try the "Expand all"/"Collapse all" control on a long section like Appliances.

@@ -1,48 +1,6 @@
 .list { display: flex; flex-direction: column; gap: 12px; }
 
-.card {
-  background: var(--bg);
-  border-radius: var(--radius-card);
-  overflow: hidden;
-}
-
-.toggle {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px 20px;
-  min-height: 44px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font);
-  text-align: left;
-}
-
 .emoji { font-size: 22px; line-height: 1; }
-
-.recipeTitle {
-  flex: 1;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.chevron {
-  font-size: 20px;
-  color: var(--text-muted);
-  transition: transform 0.2s ease;
-  display: inline-block;
-  line-height: 1;
-}
-.chevronOpen { transform: rotate(90deg); }
-
-.expanded {
-  padding: 0 20px 20px;
-  border-top: 1px solid var(--border);
-  padding-top: 18px;
-}
 
 .intro {
   font-size: 15px;

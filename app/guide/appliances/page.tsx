@@ -1,5 +1,10 @@
+'use client'
+import { useMemo } from 'react'
 import { appliances, type Appliance } from '@/lib/content'
+import { useExpandableGroup } from '@/lib/useExpandableGroup'
 import SectionHeader from '@/components/SectionHeader'
+import ExpandableCard from '@/components/ExpandableCard'
+import ExpandAllControl from '@/components/ExpandAllControl'
 import Bullets from '@/components/Bullets'
 import styles from './appliances.module.css'
 
@@ -8,37 +13,45 @@ function necessityScore(necessity: Appliance['necessity']): number {
   return parts.length ? Math.max(...parts) : 0
 }
 
-function NecessityDots({ necessity }: { necessity: string }) {
+function NecessityMeta({ necessity }: { necessity: string }) {
   const n = necessityScore(necessity)
   return (
-    <div className={styles.necessity}>
-      <div className={styles.dots} aria-label={`Necessity ${necessity} out of 5`}>
+    <span className={styles.necessity}>
+      <span className={styles.dots} aria-hidden="true">
         {[1, 2, 3, 4, 5].map(i => (
           <span key={i} className={`${styles.dot} ${i <= n ? styles.filled : ''}`} />
         ))}
-      </div>
-      <span className={styles.necessityText}>{necessity}/5</span>
-    </div>
+      </span>
+      {necessity}/5
+    </span>
   )
 }
 
 export default function AppliancesPage() {
+  const ids = useMemo(() => appliances.map(a => a.key), [])
+  const { isOpen, toggle, allOpen, expandAll, collapseAll } = useExpandableGroup(ids)
+
   return (
     <div>
       <SectionHeader
         eyebrow="Section 3"
         title="Appliances"
       />
-      <div className={styles.grid}>
+      {appliances.length > 4 && (
+        <ExpandAllControl allOpen={allOpen} onExpandAll={expandAll} onCollapseAll={collapseAll} />
+      )}
+      <div className={styles.list}>
         {appliances.map(a => (
-          <div key={a.key} className={`${styles.card} raised`}>
-            <div className={styles.top}>
-              <h3 className={styles.name}>{a.name}</h3>
-              <NecessityDots necessity={a.necessity} />
-            </div>
+          <ExpandableCard
+            key={a.key}
+            title={a.name}
+            meta={<NecessityMeta necessity={a.necessity} />}
+            open={isOpen(a.key)}
+            onToggle={() => toggle(a.key)}
+          >
             {a.use && <p className={styles.use}>{a.use}</p>}
             <Bullets items={a.bullets} />
-          </div>
+          </ExpandableCard>
         ))}
       </div>
     </div>

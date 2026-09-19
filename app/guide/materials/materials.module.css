@@ -1,15 +1,1 @@
 .list { display: flex; flex-direction: column; gap: 12px; }
-
-.row {
-  background: var(--bg);
-  border-radius: var(--radius-card);
-  padding: 16px 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.type {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-}

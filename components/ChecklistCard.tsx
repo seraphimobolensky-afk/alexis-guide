@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react'
 import { toggleChecklist } from '@/app/actions'
 import type { Bullet } from '@/lib/content'
+import ExpandableCard from './ExpandableCard'
 import Bullets from './Bullets'
 import styles from './ChecklistCard.module.css'
 
@@ -12,41 +13,39 @@ interface Props {
   frequency: string
   bullets: Bullet[]
   initialChecked: boolean
+  open: boolean
+  onToggle: () => void
 }
 
-export default function ChecklistCard({ taskKey, icon, title, frequency, bullets, initialChecked }: Props) {
+export default function ChecklistCard({ taskKey, icon, title, frequency, bullets, initialChecked, open, onToggle }: Props) {
   const [checked, setChecked] = useState(initialChecked)
   const [pending, startTransition] = useTransition()
 
-  function toggle() {
+  function toggleDone() {
     const next = !checked
     setChecked(next)
     startTransition(() => toggleChecklist('cleaning', taskKey, next))
   }
 
   return (
-    <div className={styles.cell}>
-      <div className={`${styles.card} raised ${checked ? styles.done : ''}`}>
-        <div className={styles.top}>
-          <div className={`${styles.iconBox} pressed-icon`}>{icon}</div>
-          <h3 className={styles.title}>{title}</h3>
-        </div>
-        <div className={`${styles.frequency} pressed-sm`}>
-          <span className={styles.frequencyLabel}>Frequency</span>
-          <span className={styles.frequencyText}>{frequency}</span>
-        </div>
-        <div className={styles.tips}>
-          <Bullets items={bullets} />
-        </div>
+    <ExpandableCard
+      icon={icon}
+      title={title}
+      meta={frequency}
+      open={open}
+      onToggle={onToggle}
+      persistent={
         <button
-          onClick={toggle}
+          onClick={toggleDone}
           disabled={pending}
           className={`${styles.check} ${checked ? styles.checkDone + ' pressed-sm' : 'raised-sm'}`}
           aria-label={checked ? 'Mark incomplete' : 'Mark complete'}
         >
           {checked ? '✓ Done this week' : 'Mark done'}
         </button>
-      </div>
-    </div>
+      }
+    >
+      <Bullets items={bullets} />
+    </ExpandableCard>
   )
 }

@@ -1,8 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { cleaningTasks, cleaningIntro } from '@/lib/content'
 import SectionHeader from '@/components/SectionHeader'
-import ChecklistCard from '@/components/ChecklistCard'
-import styles from './cleaning.module.css'
+import CleaningList from '@/components/CleaningList'
 
 export default async function CleaningPage() {
   const supabase = await createClient()
@@ -25,19 +24,7 @@ export default async function CleaningPage() {
         title="Cleaning schedules"
         subtitle={cleaningIntro}
       />
-      <div className={styles.grid}>
-        {cleaningTasks.map(task => (
-          <ChecklistCard
-            key={task.key}
-            taskKey={task.key}
-            icon={task.icon}
-            title={task.title}
-            frequency={task.frequency}
-            bullets={task.bullets}
-            initialChecked={!!completions[task.key]}
-          />
-        ))}
-      </div>
+      <CleaningList tasks={cleaningTasks} completions={completions} />
     </div>
   )
 }
