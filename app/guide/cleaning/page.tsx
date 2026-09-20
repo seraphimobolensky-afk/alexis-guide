@@ -6,7 +6,7 @@ import { getCleaningHabitStatuses } from './data'
 import styles from './cleaning.module.css'
 
 export default async function CleaningPage() {
-  const statuses = await getCleaningHabitStatuses()
+  const { statuses, debugError } = await getCleaningHabitStatuses()
 
   return (
     <div>
@@ -18,7 +18,7 @@ export default async function CleaningPage() {
       <Link href="/guide/habits" className={`${styles.progressLink} raised-sm`}>
         See your progress →
       </Link>
-      <CleaningList tasks={cleaningTasks} statuses={statuses} />
+      <CleaningList tasks={cleaningTasks} statuses={statuses} debugError={debugError} />
     </div>
   )
 }

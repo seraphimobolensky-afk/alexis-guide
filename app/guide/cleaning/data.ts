@@ -9,16 +9,28 @@ export interface CleaningHabitStatus {
   lastDoneLabel: string | null
 }
 
+export interface CleaningStatusResult {
+  statuses: Record<string, CleaningHabitStatus>
+  /** Only set when something actually went wrong (surfaced in the UI so we
+   * don't have to guess blind — remove once Phase 7/8 data loading is
+   * confirmed stable). */
+  debugError?: string
+}
+
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
-async function ensureCleaningHabitsSeeded(supabase: SupabaseServerClient, userId: string) {
-  const { count } = await supabase
+async function ensureCleaningHabitsSeeded(supabase: SupabaseServerClient, userId: string): Promise<string | null> {
+  const { count, error: countError } = await supabase
     .from('habits')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('group', 'cleaning')
 
-  if (count && count > 0) return
+  if (countError) {
+    console.error('ensureCleaningHabitsSeeded: count query failed', countError)
+    return `seed-count: ${countError.message}`
+  }
+  if (count && count > 0) return null
 
   const rows = cleaningTasks.map((task, index) => ({
     user_id: userId,
@@ -31,34 +43,50 @@ async function ensureCleaningHabitsSeeded(supabase: SupabaseServerClient, userId
     sort_order: index,
   }))
 
-  await supabase.from('habits').insert(rows)
+  const { error: insertError } = await supabase.from('habits').insert(rows)
+  if (insertError) {
+    console.error('ensureCleaningHabitsSeeded: insert failed', insertError)
+    return `seed-insert: ${insertError.message}`
+  }
+  return null
 }
 
-export async function getCleaningHabitStatuses(): Promise<Record<string, CleaningHabitStatus>> {
+export async function getCleaningHabitStatuses(): Promise<CleaningStatusResult> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return {}
+  if (!user) return { statuses: {} }
 
-  await ensureCleaningHabitsSeeded(supabase, user.id)
+  const seedError = await ensureCleaningHabitsSeeded(supabase, user.id)
+  if (seedError) return { statuses: {}, debugError: seedError }
 
-  const { data: habits } = await supabase
+  const { data: habits, error: habitsError } = await supabase
     .from('habits')
     .select('id, key, cadence')
     .eq('user_id', user.id)
     .eq('group', 'cleaning')
     .eq('archived', false)
 
+  if (habitsError) {
+    console.error('getCleaningHabitStatuses: habits fetch failed', habitsError)
+    return { statuses: {}, debugError: `habits-fetch: ${habitsError.message}` }
+  }
+
   const habitByKey = new Map((habits ?? []).map(h => [h.key, h]))
   const habitIds = (habits ?? []).map(h => h.id)
 
-  const { data: entries } = habitIds.length
+  const { data: entries, error: entriesError } = habitIds.length
     ? await supabase
         .from('habit_entries')
         .select('habit_id, entry_date')
         .eq('user_id', user.id)
         .in('habit_id', habitIds)
         .order('entry_date', { ascending: false })
-    : { data: [] as { habit_id: string; entry_date: string }[] }
+    : { data: [] as { habit_id: string; entry_date: string }[], error: null }
+
+  if (entriesError) {
+    console.error('getCleaningHabitStatuses: entries fetch failed', entriesError)
+    return { statuses: {}, debugError: `entries-fetch: ${entriesError.message}` }
+  }
 
   const datesByHabit = new Map<string, string[]>()
   entries?.forEach(entry => {
@@ -82,5 +110,5 @@ export async function getCleaningHabitStatuses(): Promise<Record<string, Cleanin
     statuses[task.key] = { habitId: habit.id, doneToday, doneInWindow, lastDoneLabel }
   }
 
-  return statuses
+  return { statuses }
 }
