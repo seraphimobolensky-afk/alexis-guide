@@ -25,11 +25,11 @@ export default function AuthWarpBackground({ text }: { text: string }) {
           className={styles.canvasLayer}
           style={{ position: 'absolute', inset: 0 }}
           onStatusChange={handleStatus}
-          // Tight radius (only the hovered letter and its immediate
-          // neighbours) but a strong pull, now that the shader's falloff
-          // peaks at the cursor itself instead of partway to the edge.
-          pointerInfluence={0.55}
-          pointerStrength={1.3}
+          // Radius restored to reach the same area as the original layout
+          // (see the height-compensation note in PHASE-LOG.md); strength
+          // pushed well above the original default for a much stronger pull.
+          pointerInfluence={2.2}
+          pointerStrength={2.5}
         />
       </WebglErrorBoundary>
     </div>

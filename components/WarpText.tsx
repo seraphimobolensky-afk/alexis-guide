@@ -138,16 +138,13 @@ void main() {
   float radius = max(uPointerInfluence, 0.001);
   float t = clamp(dist / radius, 0.0, 1.0);
   float lens = smoothstep(radius, 0.0, dist) * uPointerActive;
-  // Peaks at the cursor itself (t=0) and falls off sharply toward the edge
-  // of the radius, so the letter directly under the pointer bulges the
-  // most and only its immediate neighbours are pulled at all.
-  float bulge = pow(1.0 - t, 3.0) * uPointerActive;
+  float bulge = t * (1.0 - t) * (1.0 - t) * 6.75 * uPointerActive;
   vec2 dir = dist > 0.0001 ? vec2(aspectDelta.x / aspect, aspectDelta.y) / dist : vec2(0.0);
 
   float rippleWave = sin(dist * 28.0 - time * 4.2) * 0.5 + 0.5;
   float rippleRing = (rippleWave - 0.5) * uRipple;
-  vec2 pointerWarp = -dir * bulge * uPointerStrength * 0.09;
-  pointerWarp += dir * rippleRing * bulge * uPointerStrength * 0.03;
+  vec2 pointerWarp = -dir * bulge * uPointerStrength * 0.045;
+  pointerWarp += dir * rippleRing * bulge * uPointerStrength * 0.016;
 
   vec2 displaced = uv + ambient + pointerWarp;
   vec2 splitDir = ambient + pointerWarp;
