@@ -1,3 +1,5 @@
+import type { Cadence } from './habits'
+
 export interface Bullet {
   text: string
   children?: Bullet[]
@@ -8,6 +10,15 @@ export interface CleaningTask {
   icon: string
   title: string
   frequency: string
+  /**
+   * Which "done within window" rule applies (see lib/habits.ts) — not part
+   * of the original PDF content, added so habit tracking has something to
+   * key off. Several of these are approximations: the source text gives
+   * frequencies like "bi-monthly" or "every month or two" that don't map
+   * exactly onto the four windows this app supports (weekly/biweekly/
+   * monthly/as_needed), so those were rounded to the closest one (monthly).
+   */
+  cadence: Cadence
   bullets: Bullet[]
 }
 
@@ -84,6 +95,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '💨',
     title: 'Vacuum',
     frequency: 'Once a week',
+    cadence: 'weekly',
     bullets: [
       { text: 'Move the furniture! Make sure the floor is as empty as possible' },
       { text: 'Get into the nooks and crannies with the attachments that vacuums usually have' },
@@ -95,6 +107,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '🫧',
     title: 'Clothes laundry',
     frequency: "I do it once a week (when I don't have socks left)",
+    cadence: 'weekly',
     bullets: [
       {
         text: 'A few things to note:',
@@ -123,6 +136,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '🛏️',
     title: 'Bedsheets laundry',
     frequency: 'Once a week, maximum after 2 weeks',
+    cadence: 'weekly',
     bullets: [
       { text: "You might not notice the smell of your bed yourself, easy to think it's still clean" },
       { text: "Wash 40-60 degrees (hotter when it's been a while)" },
@@ -137,6 +151,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '💧',
     title: 'Towels laundry',
     frequency: 'Once a week',
+    cadence: 'weekly',
     bullets: [
       {
         text: 'WASH HOT',
@@ -153,6 +168,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '🚿',
     title: 'Sinks & shower',
     frequency: 'Around once a week in bathroom, daily wipe-down in kitchen',
+    cadence: 'weekly',
     bullets: [
       { text: 'Check cleaning materials section for which soap to use for metals' },
       {
@@ -179,6 +195,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '🪣',
     title: 'Toilet bowl',
     frequency: 'Once a week/bi-weekly',
+    cadence: 'biweekly',
     bullets: [
       { text: 'Use the specific toilet cleaner, usually has kind of a weird spout, shaped a bit like a duck' },
       { text: 'Run the cleaner around the inside of the rim of the toilet bowl (ceramic part, not where you sit) (where the water comes from)' },
@@ -196,6 +213,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '❄️',
     title: 'Fridge',
     frequency: 'Bi-monthly',
+    cadence: 'monthly',
     bullets: [
       { text: 'Check cleaning materials section for what to use' },
       { text: 'Pretty annoying but easy to do' },
@@ -209,6 +227,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '🌬️',
     title: 'Kitchen extractor filter',
     frequency: 'Every month or two',
+    cadence: 'monthly',
     bullets: [
       { text: 'Depending on the type, some of them have a white mesh material inside which you need to replace every now and then to make sure it still does its job' },
       { text: 'Wipe down with degreaser every now and then' },
@@ -219,6 +238,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '🪞',
     title: 'Mirrors/glass',
     frequency: "Whenever there's need",
+    cadence: 'as_needed',
     bullets: [
       { text: 'Use a micro-fibre towel to not have streaks when cleaning' },
       { text: 'Wipe vertically to reduce streaks even more' },
@@ -229,6 +249,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '🪄',
     title: 'Dust-off mirrors/top of shelves',
     frequency: 'Every time before you vacuum',
+    cadence: 'weekly',
     bullets: [
       { text: "If you do it after vacuuming, you'll probably push some of the dust back onto the floor" },
       { text: 'Use SWIFFER, super easy to use, satisfying ASFFF' },
@@ -239,6 +260,7 @@ export const cleaningTasks: CleaningTask[] = [
     icon: '☕',
     title: 'Kettle & coffee machines',
     frequency: 'Once a month/bi-monthly',
+    cadence: 'monthly',
     bullets: [
       { text: 'Fill it with a mixture of equal parts white vinegar and water, or 1 tablespoon of citric acid mixed in water.' },
       { text: 'Boil the mixture, let it soak for 20–30 minutes to dissolve the scale, then rinse thoroughly and boil fresh water to remove any lingering taste' },
