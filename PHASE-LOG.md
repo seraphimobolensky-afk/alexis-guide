@@ -261,3 +261,9 @@ A running record of what changed in each phase of work, kept so progress can be 
 **Anything to click:**
 - Nothing required in Vercel or Supabase — this phase is purely visual/component work, no auth flow, schema, or env changes.
 - Recommended: once Chrome browser tools are available, or on a real device, look at all four signed-out screens in both light and dark theme — this is the first phase where I genuinely could not verify the result myself.
+
+**Post-deploy fix:** user sent screenshots (the first real look at this phase, on a laptop) showing the warp text overlapping and partially hidden behind the login card, since `WarpText` was centered across the *entire* page (same vertical center as the card) rather than confined to its own space above it. Fixed by restructuring `AuthShell` into a flex column — a `.textZone` band (height `clamp(100px, 18vh, 200px)`, so it scales with viewport but stays sane at the extremes) followed by the card, with a `gap` between them instead of independent absolute centering — so the two can never overlap regardless of card height or viewport size, and `WarpText`'s own fit-to-container sizing now works out proportionally within that band automatically. Moved the full-page gradient wash from `AuthWarpBackground` up into `AuthShell` (it now sits behind both the text zone and the card, not just behind the text), and widened the scrim to cover the whole content area instead of just where the card used to sit.
+
+Also added the `ThemeToggle` (same component from Phase 1) to `AuthShell`, top-right corner — so it now appears on all four signed-out screens, not just requested for `/login` specifically. Flagging that scope choice: it seemed inconsistent to have it on login but not on reset/create-account/set-password, especially since dark/light mode has no other way to be changed pre-auth, but if only `/login` was wanted, easy to move it to that page alone instead.
+
+Rebuilt and re-linted clean after both changes.

@@ -13,24 +13,57 @@
   padding-right: calc(24px + env(safe-area-inset-right));
 }
 
-/* Sits between the animated background and the card so the card's contents
-   stay readable regardless of what the shader is doing behind it. */
+.pageGradient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(
+    120% 90% at 50% 8%,
+    color-mix(in srgb, var(--accent) 16%, var(--bg)) 0%,
+    var(--bg) 62%
+  );
+}
+
+/* Sits between the animated background and the content so the card's
+   contents stay readable regardless of what the shader is doing behind it. */
 .scrim {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   background: radial-gradient(
-    62% 55% at 50% 42%,
-    color-mix(in srgb, var(--bg) 75%, transparent) 0%,
-    color-mix(in srgb, var(--bg) 30%, transparent) 65%,
+    65% 60% at 50% 50%,
+    color-mix(in srgb, var(--bg) 72%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 25%, transparent) 68%,
     transparent 100%
   );
 }
 
-.card {
+.themeToggleSlot {
+  position: fixed;
+  top: calc(16px + env(safe-area-inset-top));
+  right: calc(16px + env(safe-area-inset-right));
+  z-index: 3;
+}
+
+.content {
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 4vh, 56px);
+  width: 100%;
+}
+
+.textZone {
+  position: relative;
+  width: 100%;
+  height: clamp(100px, 18vh, 200px);
+}
+
+.card {
   background: color-mix(in srgb, var(--surface) 88%, transparent);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);

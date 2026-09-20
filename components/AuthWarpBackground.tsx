@@ -17,7 +17,6 @@ export default function AuthWarpBackground({ text }: { text: string }) {
   // twice (as an image label, or as this fallback text) from behind it.
   return (
     <div className={styles.background} aria-hidden="true">
-      <div className={styles.gradient} />
       {status !== 'ready' && <div className={styles.fallbackText}>{text}</div>}
       <WebglErrorBoundary fallback={null}>
         <WarpText
