@@ -27,9 +27,12 @@ export default function AuthWarpBackground({ text }: { text: string }) {
           onStatusChange={handleStatus}
           // Radius restored to reach the same area as the original layout
           // (see the height-compensation note in PHASE-LOG.md); strength
-          // pushed well above the original default for a much stronger pull.
+          // above the original default for a stronger pull. The ripple-ring
+          // effect scales with this same strength value, so at this level
+          // it read as laggy/choppy rather than smooth — turned off.
           pointerInfluence={2.2}
-          pointerStrength={2.5}
+          pointerStrength={1.8}
+          ripple={false}
         />
       </WebglErrorBoundary>
     </div>
