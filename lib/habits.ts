@@ -52,3 +52,37 @@ export function daysAgoLabel(entryDateStr: string, todayStr: string): string {
   if (diff === 1) return 'yesterday'
   return `${diff} days ago`
 }
+
+export type RangeDays = 7 | 30 | 90
+
+/** Every calendar date in the range, oldest first, ending today (inclusive). */
+export function rangeDates(days: RangeDays, todayStr: string = todayDateString()): string[] {
+  const today = parseDateUTC(todayStr)
+  const dates: string[] = []
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today)
+    d.setUTCDate(today.getUTCDate() - i)
+    dates.push(d.toISOString().slice(0, 10))
+  }
+  return dates
+}
+
+/** A short, human date label for chart axes — "Sep 20", not the raw ISO string. */
+export function formatShortDate(dateStr: string): string {
+  const date = parseDateUTC(dateStr)
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+}
+
+/**
+ * A thinned-out subset of `dates` to use as explicit axis ticks, so a
+ * 90-day range doesn't try to cram 90 labels into a 360px-wide screen.
+ * Always keeps the first and last date.
+ */
+export function pickTickDates(dates: string[], maxTicks: number): string[] {
+  if (dates.length <= maxTicks) return dates
+  const step = Math.ceil(dates.length / maxTicks)
+  const ticks = dates.filter((_, i) => i % step === 0)
+  const last = dates[dates.length - 1]
+  if (ticks[ticks.length - 1] !== last) ticks.push(last)
+  return ticks
+}

@@ -1,7 +1,9 @@
+import Link from 'next/link'
 import { cleaningTasks, cleaningIntro } from '@/lib/content'
 import SectionHeader from '@/components/SectionHeader'
 import CleaningList from '@/components/CleaningList'
 import { getCleaningHabitStatuses } from './data'
+import styles from './cleaning.module.css'
 
 export default async function CleaningPage() {
   const statuses = await getCleaningHabitStatuses()
@@ -13,6 +15,9 @@ export default async function CleaningPage() {
         title="Cleaning schedules"
         subtitle={cleaningIntro}
       />
+      <Link href="/guide/habits" className={`${styles.progressLink} raised-sm`}>
+        See your progress →
+      </Link>
       <CleaningList tasks={cleaningTasks} statuses={statuses} />
     </div>
   )

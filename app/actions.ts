@@ -35,6 +35,7 @@ export async function logHabitEntry(input: {
   )
 
   revalidatePath('/guide/cleaning')
+  revalidatePath('/guide/habits')
   return { error: error?.message }
 }
 
@@ -50,6 +51,7 @@ export async function removeHabitEntry(input: { habitId: string; entryDate?: str
     .eq('entry_date', entryDate)
 
   revalidatePath('/guide/cleaning')
+  revalidatePath('/guide/habits')
   return { error: error?.message }
 }
 
@@ -84,7 +86,35 @@ export async function addHabit(input: {
     .single()
 
   revalidatePath('/guide/cleaning')
+  revalidatePath('/guide/habits')
   return { data, error: error?.message }
+}
+
+export async function updateHabit(habitId: string, input: {
+  label?: string
+  icon?: string
+  unit?: string
+  target?: number | null
+  cadence?: Cadence
+}) {
+  const { supabase, user } = await requireUser()
+
+  const patch: Record<string, unknown> = {}
+  if (input.label !== undefined) patch.label = input.label
+  if (input.icon !== undefined) patch.icon = input.icon || null
+  if (input.unit !== undefined) patch.unit = input.unit || null
+  if (input.target !== undefined) patch.target = input.target
+  if (input.cadence !== undefined) patch.cadence = input.cadence
+
+  const { error } = await supabase
+    .from('habits')
+    .update(patch)
+    .eq('id', habitId)
+    .eq('user_id', user.id)
+
+  revalidatePath('/guide/cleaning')
+  revalidatePath('/guide/habits')
+  return { error: error?.message }
 }
 
 export async function archiveHabit(habitId: string) {
@@ -97,6 +127,24 @@ export async function archiveHabit(habitId: string) {
     .eq('user_id', user.id)
 
   revalidatePath('/guide/cleaning')
+  revalidatePath('/guide/habits')
+  return { error: error?.message }
+}
+
+// Hard delete — permanently removes the habit and (via ON DELETE CASCADE)
+// all of its logged entries. The UI must confirm with the user before
+// calling this; archiving is the reversible, history-preserving option.
+export async function deleteHabit(habitId: string) {
+  const { supabase, user } = await requireUser()
+
+  const { error } = await supabase
+    .from('habits')
+    .delete()
+    .eq('id', habitId)
+    .eq('user_id', user.id)
+
+  revalidatePath('/guide/cleaning')
+  revalidatePath('/guide/habits')
   return { error: error?.message }
 }
 

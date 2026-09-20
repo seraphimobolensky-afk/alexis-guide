@@ -1,0 +1,224 @@
+.panel {
+  background: var(--bg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-raised);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.addButton {
+  background: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 10px 16px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.addButton:hover { color: var(--accent); }
+
+.empty {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  padding: 12px 0;
+}
+
+.habitPicker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.habitPill {
+  background: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 14px;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.habitPillActive { color: var(--text-primary); }
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.segmented {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.segment {
+  background: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 14px;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.segmentActive { color: var(--text-primary); }
+
+.logRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+.logLabel {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.logButton {
+  background: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 10px 18px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.logButtonDone { color: var(--text-primary); }
+
+.numericLog {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.numInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  outline: none;
+  padding: 10px 16px;
+  min-height: 44px;
+  font-size: 16px;
+  font-family: var(--font);
+  color: var(--text-primary);
+}
+
+.numInput::placeholder { color: var(--text-muted); }
+
+.manageRow {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.manageLink {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 6px 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.manageLink:hover { color: var(--accent); }
+
+.manageLinkDanger {
+  composes: manageLink;
+  color: var(--danger) !important;
+}
+
+.manageLinkDanger:hover { opacity: 0.8; }
+
+.confirmDelete {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-pressed-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 12px;
+}
+
+.cancelLink {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text-muted);
+  min-height: 44px;
+}
+
+.deleteConfirmButton {
+  background: var(--danger);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 10px 16px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: white;
+  cursor: pointer;
+}
