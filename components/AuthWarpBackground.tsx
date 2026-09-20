@@ -25,6 +25,12 @@ export default function AuthWarpBackground({ text }: { text: string }) {
           className={styles.canvasLayer}
           style={{ position: 'absolute', inset: 0 }}
           onStatusChange={handleStatus}
+          // The pointer-influence radius is measured relative to this
+          // container's own height, which is now a short band instead of
+          // the full page — so the defaults (tuned for a tall container)
+          // need to be scaled way up to reach the same on-screen area.
+          pointerInfluence={2.2}
+          pointerStrength={0.6}
         />
       </WebglErrorBoundary>
     </div>
