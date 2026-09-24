@@ -343,3 +343,17 @@ Rebuilt and re-linted clean after both changes.
 - `package.json` / `package-lock.json` (added `recharts`)
 
 **Anything to click:** nothing required in Vercel or Supabase — this phase only reads/writes the tables Phase 7 already created. Recommended: open `/guide/habits` on a real phone, in both light and dark mode, and add a couple of test habits (one of each type) to see the charts with real data — that's the one thing I have no way to check from here.
+
+---
+
+## Fix — "Couldn't load your cleaning habits" (permission denied)
+**Date:** 2026-09-24
+
+**What changed:**
+- Root cause: the Phase 7 tables existed and had RLS policies, but the `authenticated` role had no table-level privileges on them, so every query failed with Postgres error 42501 ("permission denied"). RLS policies only filter rows — the role still needs `grant select, insert, update, delete` to touch the table at all, and this Supabase project doesn't add those automatically for SQL-editor-created tables.
+- The debug line showed just `seed-count:` because the count query is a head-only request, which gets no response body — so the error arrived with an empty message. Added `describeError` in `app/guide/cleaning/data.ts`, which also includes the error code/details so the line is never blank.
+- Appended the three `grant` statements to `supabase-schema.sql` (safe to re-run).
+
+**Files touched:** `supabase-schema.sql`, `app/guide/cleaning/data.ts`
+
+**Anything to click:** run the three `grant` lines in the Supabase SQL editor.

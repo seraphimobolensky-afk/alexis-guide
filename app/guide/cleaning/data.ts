@@ -19,6 +19,13 @@ export interface CleaningStatusResult {
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
+// Head-only requests (like the count query) get no response body back, so a
+// failure there arrives with an empty `message` — include the code/status too
+// so the debug line is never blank.
+function describeError(error: { message?: string; code?: string; details?: string }): string {
+  return [error.code, error.message, error.details].filter(Boolean).join(' — ') || 'unknown error (no message returned)'
+}
+
 async function ensureCleaningHabitsSeeded(supabase: SupabaseServerClient, userId: string): Promise<string | null> {
   const { count, error: countError } = await supabase
     .from('habits')
@@ -28,7 +35,7 @@ async function ensureCleaningHabitsSeeded(supabase: SupabaseServerClient, userId
 
   if (countError) {
     console.error('ensureCleaningHabitsSeeded: count query failed', countError)
-    return `seed-count: ${countError.message}`
+    return `seed-count: ${describeError(countError)}`
   }
   if (count && count > 0) return null
 
@@ -46,7 +53,7 @@ async function ensureCleaningHabitsSeeded(supabase: SupabaseServerClient, userId
   const { error: insertError } = await supabase.from('habits').insert(rows)
   if (insertError) {
     console.error('ensureCleaningHabitsSeeded: insert failed', insertError)
-    return `seed-insert: ${insertError.message}`
+    return `seed-insert: ${describeError(insertError)}`
   }
   return null
 }
@@ -68,7 +75,7 @@ export async function getCleaningHabitStatuses(): Promise<CleaningStatusResult> 
 
   if (habitsError) {
     console.error('getCleaningHabitStatuses: habits fetch failed', habitsError)
-    return { statuses: {}, debugError: `habits-fetch: ${habitsError.message}` }
+    return { statuses: {}, debugError: `habits-fetch: ${describeError(habitsError)}` }
   }
 
   const habitByKey = new Map((habits ?? []).map(h => [h.key, h]))
@@ -85,7 +92,7 @@ export async function getCleaningHabitStatuses(): Promise<CleaningStatusResult> 
 
   if (entriesError) {
     console.error('getCleaningHabitStatuses: entries fetch failed', entriesError)
-    return { statuses: {}, debugError: `entries-fetch: ${entriesError.message}` }
+    return { statuses: {}, debugError: `entries-fetch: ${describeError(entriesError)}` }
   }
 
   const datesByHabit = new Map<string, string[]>()

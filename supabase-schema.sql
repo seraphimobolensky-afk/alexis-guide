@@ -110,3 +110,13 @@ create policy "Users manage their own grocery items"
   with check (auth.uid() = user_id);
 
 create index if not exists grocery_items_user_purchased_idx on grocery_items(user_id, purchased);
+
+-- ─── Table privileges ────────────────────────────────────────────────────────
+-- RLS policies only filter rows; the role still needs table-level privileges
+-- to touch the table at all. This Supabase project doesn't grant them
+-- automatically for tables created in the SQL editor, so without these every
+-- query from a signed-in user fails with "permission denied" (42501).
+-- Only `authenticated` is granted — the app never queries these signed out.
+grant select, insert, update, delete on habits        to authenticated;
+grant select, insert, update, delete on habit_entries to authenticated;
+grant select, insert, update, delete on grocery_items to authenticated;
