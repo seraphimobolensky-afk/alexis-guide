@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -17,6 +17,16 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const router = useRouter()
   const supabase = createClient()
+
+  // Arriving from app/auth/not-invited: signed in with an email that isn't on
+  // the list. Read after mount (not during render) so it can't mismatch the
+  // server HTML.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('error') === 'not-invited') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError("This guide is invite-only right now — that email isn't on the list yet.")
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

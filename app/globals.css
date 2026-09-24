@@ -141,6 +141,20 @@ a {
   outline-offset: 2px;
 }
 
+/* Reduced motion, site-wide: collapses every CSS transition and keyframe
+   animation to effectively instant (end states still apply, so nothing is
+   left half-shown). JS-driven motion — the nav's GSAP, the WebGL login
+   effects, list reveals — checks the same setting itself. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 .raised        { box-shadow: var(--shadow-raised); }
 .raised-sm     { box-shadow: var(--shadow-raised-sm); }
 .pressed       { box-shadow: var(--shadow-pressed); }

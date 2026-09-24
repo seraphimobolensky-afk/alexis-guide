@@ -10,25 +10,16 @@ import styles from '@/app/guide/cleaning/cleaning.module.css'
 interface Props {
   tasks: CleaningTask[]
   statuses: Record<string, CleaningHabitStatus>
-  debugError?: string
 }
 
-export default function CleaningList({ tasks, statuses, debugError }: Props) {
+export default function CleaningList({ tasks, statuses }: Props) {
   const ids = useMemo(() => tasks.map(t => t.key), [tasks])
   const { isOpen, toggle, allOpen, expandAll, collapseAll } = useExpandableGroup(ids)
 
   if (Object.keys(statuses).length === 0) {
     return (
       <p className={styles.setupNote}>
-        Couldn&rsquo;t load your cleaning habits. If this is a fresh setup, make sure the Phase 7
-        database migration (habits / habit_entries in supabase-schema.sql) has been run in Supabase.
-        {debugError && (
-          <>
-            <br />
-            <br />
-            <strong>Debug details:</strong> {debugError}
-          </>
-        )}
+        Couldn&rsquo;t load your cleaning checklist right now. Try reloading the page in a moment.
       </p>
     )
   }

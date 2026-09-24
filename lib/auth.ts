@@ -1,5 +1,6 @@
 // Server-only: reads ALLOWED_EMAILS (no NEXT_PUBLIC_ prefix, never bundled
-// client-side). Only import this from server files — app/auth/actions.ts.
+// client-side). Only import this from server files — app/auth/actions.ts and
+// app/guide/layout.tsx.
 
 export function getAllowedEmails(): string[] {
   return (process.env.ALLOWED_EMAILS ?? '')

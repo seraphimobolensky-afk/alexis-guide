@@ -144,7 +144,6 @@
   background: var(--bg);
   border: none;
   border-radius: var(--radius-pill);
-  outline: none;
   padding: 10px 16px;
   min-height: 44px;
   font-size: 16px;
@@ -219,7 +218,7 @@
   font-size: 14px;
   font-weight: 500;
   font-family: var(--font);
-  color: white;
+  color: var(--bg); /* dark text on the light-red dark-mode --danger; white fails contrast there */
   cursor: pointer;
 }
 

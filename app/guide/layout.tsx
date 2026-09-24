@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isEmailAllowed } from '@/lib/auth'
 import GuideNav from '@/components/GuideNav'
 import styles from './layout.module.css'
 
@@ -9,6 +10,10 @@ export default async function GuideLayout({ children }: { children: React.ReactN
 
   if (!user) {
     redirect('/login')
+  }
+  // The server-side allowlist check (see app/auth/not-invited/route.ts).
+  if (!isEmailAllowed(user.email ?? '')) {
+    redirect('/auth/not-invited')
   }
 
   return (

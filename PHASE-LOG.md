@@ -418,3 +418,38 @@ Rebuilt and re-linted clean after both changes.
 - Verified with `tsc`, lint, `npm run build`, and headless Chrome: after scrolling, only the on-screen items are revealed (7 of 24) and the rest are hidden until reached; a capture mid-transition shows the scale-in.
 
 **Files touched:** `lib/useScrollReveal.ts` (new), `components/Reveal.tsx` (new), `app/globals.css`, `components/ExpandableCard.tsx`, `components/TipList.tsx`, `components/GroceryList.tsx`, `components/GroceryList.module.css`
+
+---
+
+## Phase 10 — Final check before going live
+**Date:** 2026-09-24
+
+**Checks and results:**
+1. **Build + lint:** both pass with 0 errors and 0 warnings. The one previous warning (`<img>` in CardNav) was dead code: the `logo` prop was never passed, so it was removed.
+2. **TypeScript:** no `@ts-ignore`/`@ts-expect-error`. The one `any` (HabitChart's tooltip formatter) is now typed with recharts' own `Formatter<ValueType, NameType>`. The remaining eslint-disables are three documented `set-state-in-effect` cases (reading localStorage/URL after mount, no-IntersectionObserver fallback).
+3. **Widths:** a headless-Chrome audit of all 16 routes (4 auth pages, 11 guide pages, plus a sample-data page for the cleaning/habits/grocery components, which are empty without a signed-in user) at 360, 390, 768 and 1280px in both themes (128 combinations) found no horizontal scrolling and no element past the screen edge. Screenshots reviewed at 360 dark, 390 light and 1280 light: no overlapping or cut-off text.
+4. **Dark mode:** body background is set from the theme on every route. The theme is applied by an inline script before first paint, so there's no light flash. The only raw colours outside the theme tokens were defaults that get overridden, and `white` on the delete buttons (fixed, see 5).
+5. **Contrast (WCAG, need ≥ 4.5:1):**
+
+   | Text | Background | Light | Dark |
+   |---|---|---|---|
+   | text-primary | bg | 11.89 | 12.49 |
+   | text-secondary | bg | 5.61 | 6.59 |
+   | text-muted | bg | 4.74 | 5.18 |
+   | accent (links) | bg | 5.12 | 5.81 |
+   | danger (errors) | bg | 5.48 | 6.65 |
+   | bg (✓ on ticked box) | accent | 5.12 | 5.81 |
+   | ~~white~~ → bg | danger (delete buttons) | ~~6.54~~ → 5.48 | ~~**2.28**~~ → 6.65 |
+
+   The white-on-red delete buttons failed in dark mode (2.28) and now use the background colour as text.
+6. **Keyboard:** tabbed through login, nav, an expandable card and the habit form. Everything is reachable in a sensible order, and Enter opens the menu and cards. **Fixed:** five inputs (habit value, habit form, login, auth pages) had `outline: none`, hiding the focus ring, and now show it. **Fixed:** Escape closed the menu but dropped keyboard focus onto the page body; focus now returns to the menu button.
+7. **Reduced motion:** added a site-wide rule that makes every CSS transition/animation instant. With the setting emulated, 0 elements animate on any page checked, all list items are visible immediately, and the menu opens instantly. **Fixed along the way:** the login button's WebGL effect crashed on every load (`reduceMotion` was read before it was declared) and silently fell back to the plain button, so the effect never showed.
+8. **Secrets:** `.env*` is git-ignored and has never been in git history; no keys in the source.
+9. **Allowlist:** the code fails closed and `ALLOWED_EMAILS` is set in `.env.local`. **Fixed a real gap:** the list was only checked in the browser before calling Supabase, and Supabase's browser key is public, so an account could be created without going through those pages and then read the guide. `app/guide/layout.tsx` now checks the list on the server; anyone signed in but not listed is sent to `/auth/not-invited` (new), which signs them out and shows the invite-only message on the login page. Vercel's setting couldn't be checked from here (CLI not logged in).
+10. **Dead code removed:** the inert Tailwind setup (`postcss.config.mjs`, `tailwindcss`, `@tailwindcss/postcss`; nothing imported it), the five default Next.js SVGs in `public/`, and CardNav's unused logo code. No unused components or CSS modules were found. There was no old Sidebar left, and `tsconfig.tsbuildinfo` isn't tracked (it's git-ignored).
+11. **README** rewritten: real auth setup (layout-based protection, not middleware), the server-side allowlist, all tables, the `ALLOWED_EMAILS` env var, redirect URLs, and the staging workflow.
+12. **Fresh account:** not something I can do myself (creating accounts/entering passwords). Reading the new-account path turned up one gap: cleaning habits were only created on the first visit to the cleaning page, so a new user opening Habits first saw "No cleaning habits found yet". The Habits page now creates them too.
+
+**Also:** the dev-mode hydration warning about `data-theme` is fixed (`suppressHydrationWarning` on `<html>` only, since the theme script sets it before React loads). The developer-facing "Debug details / Phase 7 migration" text on the cleaning and grocery error states is replaced with a plain "try reloading" message; the details still go to the server log.
+
+**Files touched:** `app/globals.css`, `app/layout.tsx`, `app/guide/layout.tsx`, `app/auth/not-invited/route.ts` (new), `app/login/page.tsx`, `lib/auth.ts`, `components/SpecularButton.tsx`, `components/CardNav.tsx` + `.css`, `components/HabitChart.tsx`, `components/CleaningList.tsx`, `app/guide/cleaning/{page.tsx,data.ts}`, `app/guide/habits/data.ts`, `app/guide/grocery-list/page.tsx`, `components/{GroceryList,HabitChartPanel}.module.css`, `components/HabitForm.module.css`, `app/auth/auth.module.css`, `app/login/login.module.css`, `README.md`, `package.json`/`package-lock.json`; deleted `postcss.config.mjs` and `public/*.svg`.

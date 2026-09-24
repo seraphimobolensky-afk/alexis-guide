@@ -11,13 +11,11 @@ export interface CleaningHabitStatus {
 
 export interface CleaningStatusResult {
   statuses: Record<string, CleaningHabitStatus>
-  /** Only set when something actually went wrong (surfaced in the UI so we
-   * don't have to guess blind — remove once Phase 7/8 data loading is
-   * confirmed stable). */
+  /** Set when loading failed; logged server-side (Vercel logs), not shown to the user. */
   debugError?: string
 }
 
-type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
+export type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
 // Head-only requests (like the count query) get no response body back, so a
 // failure there arrives with an empty `message` — include the code/status too
@@ -26,7 +24,8 @@ function describeError(error: { message?: string; code?: string; details?: strin
   return [error.code, error.message, error.details].filter(Boolean).join(' — ') || 'unknown error (no message returned)'
 }
 
-async function ensureCleaningHabitsSeeded(supabase: SupabaseServerClient, userId: string): Promise<string | null> {
+/** Creates the 11 cleaning habits for a user who doesn't have them yet. Safe to call on every request. */
+export async function ensureCleaningHabitsSeeded(supabase: SupabaseServerClient, userId: string): Promise<string | null> {
   const { count, error: countError } = await supabase
     .from('habits')
     .select('id', { count: 'exact', head: true })

@@ -36,7 +36,6 @@
   background: var(--bg);
   border: none;
   border-radius: var(--radius-sm);
-  outline: none;
   padding: 12px 14px;
   min-height: 44px;
   font-size: 16px;

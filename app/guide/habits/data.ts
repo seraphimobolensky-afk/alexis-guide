@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { ensureCleaningHabitsSeeded } from '@/app/guide/cleaning/data'
 import type { Cadence } from '@/lib/habits'
 import { defaultHabitColor, isHabitColor, type HabitColor } from '@/lib/habitColors'
 
@@ -59,6 +60,10 @@ export async function getHabitsPageData(): Promise<HabitsPageData> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { cleaningHabits: [], customHabits: [], entriesByHabit: {} }
+
+  // A brand-new user may open Habits before ever visiting the cleaning page,
+  // which is where the cleaning habits used to be created — do it here too.
+  await ensureCleaningHabitsSeeded(supabase, user.id)
 
   const baseColumns = 'id, key, label, icon, value_type, unit, target, cadence, group, sort_order'
   const fetchHabits = (columns: string) =>

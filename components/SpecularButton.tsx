@@ -224,6 +224,10 @@ const SpecularButton = ({
       renderer.render({ scene: mesh });
     };
 
+    // Declared before resize(), which reads it on its first (synchronous) call
+    // below — declaring it later threw a TDZ ReferenceError on every mount.
+    let reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
     const resize = () => {
       // Fractional size + explicit center keep the SDF pinned to the exact
       // CSS border, instead of drifting up to a pixel from offsetWidth rounding.
@@ -303,7 +307,6 @@ const SpecularButton = ({
       renderer.render({ scene: mesh });
     };
 
-    let reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     if (reduceMotion) {
       renderStatic();
     } else {

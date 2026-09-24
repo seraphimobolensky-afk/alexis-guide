@@ -19,9 +19,6 @@ export type CardNavItem = {
 }
 
 export interface CardNavProps {
-  /** Optional image logo. If omitted, brandLabel renders as styled text instead. */
-  logo?: string
-  logoAlt?: string
   brandLabel?: string
   brandHref?: string
   items: CardNavItem[]
@@ -35,8 +32,6 @@ const TOP_BAR_HEIGHT = 60
 const CONTENT_PADDING = 16
 
 const CardNav: React.FC<CardNavProps> = ({
-  logo,
-  logoAlt = 'Logo',
   brandLabel = "Alexis's Guide",
   brandHref = '/guide/welcome',
   items,
@@ -46,6 +41,7 @@ const CardNav: React.FC<CardNavProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false)
   const navRef = useRef<HTMLDivElement | null>(null)
+  const hamburgerRef = useRef<HTMLButtonElement | null>(null)
   const cardsRef = useRef<HTMLDivElement[]>([])
   const tlRef = useRef<gsap.core.Timeline | null>(null)
 
@@ -152,11 +148,15 @@ const CardNav: React.FC<CardNavProps> = ({
     else openMenu()
   }
 
-  // Escape key closes the panel.
+  // Escape key closes the panel, and hands focus back to the menu button —
+  // otherwise focus is left on a link that's about to become hidden, and a
+  // keyboard user drops back to the top of the page.
   useEffect(() => {
     if (!isExpanded) return
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeMenu()
+      if (e.key !== 'Escape') return
+      closeMenu()
+      hamburgerRef.current?.focus()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
@@ -183,6 +183,7 @@ const CardNav: React.FC<CardNavProps> = ({
       <nav ref={navRef} className={`card-nav ${isExpanded ? 'open' : ''}`}>
         <div className="card-nav-top">
           <button
+            ref={hamburgerRef}
             type="button"
             className={`hamburger-menu ${isExpanded ? 'open' : ''}`}
             onClick={toggleMenu}
@@ -195,11 +196,7 @@ const CardNav: React.FC<CardNavProps> = ({
           </button>
 
           <Link href={brandHref} className="logo-container">
-            {logo ? (
-              <img src={logo} alt={logoAlt} className="logo" />
-            ) : (
-              <span className="logo-text">{brandLabel}</span>
-            )}
+            <span className="logo-text">{brandLabel}</span>
           </Link>
         </div>
 

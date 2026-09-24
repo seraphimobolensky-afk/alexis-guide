@@ -11,6 +11,7 @@ import {
   Tooltip,
   ReferenceLine,
 } from 'recharts'
+import type { Formatter, NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 import { formatShortDate, pickTickDates } from '@/lib/habits'
 
 /** One row per date; each series' value lives under its own `id` key. */
@@ -75,10 +76,10 @@ export default function HabitChart({ data, series, scale, unit, target, chartTyp
     return formatValue(value)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function tooltipFormatter(value: any, name: any) {
-    return [formatValue(Number(value)), combined ? String(name) : '']
-  }
+  const tooltipFormatter: Formatter<ValueType, NameType> = (value, name) => [
+    formatValue(Number(value)),
+    combined ? String(name) : '',
+  ]
 
   const sharedAxes = (
     <>

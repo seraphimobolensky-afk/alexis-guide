@@ -19,7 +19,7 @@ export default async function GroceryListPage() {
       </Link>
       {loadError ? (
         <p className={styles.loadError}>
-          Couldn’t load your grocery list. <strong>Details:</strong> {loadError}
+          Couldn’t load your grocery list right now. Try reloading the page in a moment.
         </p>
       ) : (
         <GroceryList items={items} overrides={overrides} />
