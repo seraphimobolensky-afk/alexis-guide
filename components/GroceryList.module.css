@@ -229,7 +229,8 @@
   cursor: pointer;
 }
 
-/* Ticking: strike through and fade/slide out, then the row moves to Bought. */
+/* Ticking: strike through and fade/slide out, then the row moves to Bought
+   (where it scales in via the shared list reveal). */
 .rowLeaving .itemName {
   text-decoration: line-through;
   color: var(--text-muted);
@@ -243,16 +244,8 @@
   to { opacity: 0; transform: translateX(12px); }
 }
 
-.rowEntering {
-  animation: rowEnter 240ms ease-out;
-}
-
-@keyframes rowEnter {
-  from { opacity: 0; transform: translateY(-6px); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .rowLeaving, .rowEntering { animation: none; }
+  .rowLeaving { animation: none; }
 }
 
 .boughtSection {

@@ -150,3 +150,23 @@ a {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); opacity: 0.4; border-radius: 99px; }
+
+/* List-item reveal (React Bits "Animated List" effect) — see lib/useScrollReveal.ts */
+.reveal {
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 200ms ease-out 100ms, transform 200ms ease-out 100ms;
+}
+
+.reveal.reveal-in {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal.reveal-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

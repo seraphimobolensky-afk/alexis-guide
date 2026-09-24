@@ -401,3 +401,20 @@ Rebuilt and re-linted clean after both changes.
 **Files touched:** `lib/groceryCategories.ts` (new), `components/GroceryList.tsx` + `.module.css` (new), `app/guide/grocery-list/{page.tsx,data.ts,groceryList.module.css}` (new), `app/guide/groceries/page.tsx` + `groceries.module.css`, `app/actions.ts`, `lib/navGroups.ts`, `supabase-schema.sql`
 
 **Anything to click:** run the `grocery_category_overrides` block from the end of `supabase-schema.sql` in the Supabase SQL editor.
+
+---
+
+## Phase 9.1 — "Animated List" reveal on every list
+**Date:** 2026-09-24
+
+**What changed:**
+- Added the React Bits [Animated List](https://reactbits.dev/components/animated-list) item effect to every list in the app: each item scales up from 0.7 and fades in as it scrolls into view, and scales back down as it scrolls out (every time, like the original). Same timing as the original: 200ms, 100ms delay.
+- Applies to: all expandable cards (cleaning, materials, appliances, recipes, and the expandable tips on groceries/roommates/life/uni), the plain numbered tips, and grocery list rows (to-buy and Bought). Not applied to bullet points *inside* cards (it animates list items, not every line of text) or to controls like the habit picker pills.
+- **Only the item animation was taken, not the whole component.** The original is a fixed-height scroll box with fade gradients, hover-to-select, and keyboard navigation that hijacks Tab and the arrow keys for the whole page. On these pages that would mean a scroll area inside the page (awkward on phones) and a Tab key that no longer moves between buttons. So the effect runs on normal page scrolling instead.
+- **Built without adding a library:** the original uses the `motion` package; this is an IntersectionObserver plus a CSS transition (`lib/useScrollReveal.ts`, `components/Reveal.tsx`, `.reveal` in `globals.css`), giving the same effect with no new dependency.
+- **One behaviour tweak:** the original counts an item as "in view" when half of it is visible. An expanded card taller than two screens can never be half-visible, so it would fade out while being read. Here an item is in view while any part of it is in the middle 80% of the screen.
+- Respects the phone's reduced-motion setting (items just show, no animation).
+- Grocery rows: the Phase 9 "fade in to Bought" animation was replaced by the shared reveal (a ticked item now scales into Bought the same way). The tick's strike-and-slide-out is unchanged.
+- Verified with `tsc`, lint, `npm run build`, and headless Chrome: after scrolling, only the on-screen items are revealed (7 of 24) and the rest are hidden until reached; a capture mid-transition shows the scale-in.
+
+**Files touched:** `lib/useScrollReveal.ts` (new), `components/Reveal.tsx` (new), `app/globals.css`, `components/ExpandableCard.tsx`, `components/TipList.tsx`, `components/GroceryList.tsx`, `components/GroceryList.module.css`

@@ -1,5 +1,6 @@
 'use client'
 import { useId, type ReactNode } from 'react'
+import { useScrollReveal } from '@/lib/useScrollReveal'
 import styles from './ExpandableCard.module.css'
 
 interface ExpandableCardProps {
@@ -15,9 +16,10 @@ interface ExpandableCardProps {
 
 export default function ExpandableCard({ icon, title, meta, open, onToggle, children, persistent }: ExpandableCardProps) {
   const contentId = useId()
+  const [revealTarget, revealClass] = useScrollReveal<HTMLDivElement>()
 
   return (
-    <div className={styles.card}>
+    <div ref={revealTarget} className={`${styles.card} ${revealClass}`}>
       <button
         type="button"
         className={styles.header}

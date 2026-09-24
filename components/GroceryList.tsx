@@ -16,6 +16,7 @@ import {
   type GroceryCategory,
 } from '@/lib/groceryCategories'
 import type { GroceryItem } from '@/app/guide/grocery-list/data'
+import Reveal from './Reveal'
 import styles from './GroceryList.module.css'
 
 interface Props {
@@ -62,9 +63,6 @@ export default function GroceryList({ items, overrides }: Props) {
   // round-trip finishes already lands in the corrected category.
   const [localOverrides, setLocalOverrides] = useState<Record<string, string>>({})
   const [leavingIds, setLeavingIds] = useState<Set<string>>(() => new Set())
-  // Only rows ticked this session animate into Bought — not the whole
-  // history on every page load.
-  const [justBoughtIds, setJustBoughtIds] = useState<Set<string>>(() => new Set())
   const [menuId, setMenuId] = useState<string | null>(null)
   const [confirmClear, setConfirmClear] = useState(false)
   const [error, setError] = useState('')
@@ -121,14 +119,12 @@ export default function GroceryList({ items, overrides }: Props) {
 
   function handleTick(item: GroceryItem) {
     if (item.id.startsWith('temp-') || leavingIds.has(item.id)) return
-    const commit = () => {
-      setJustBoughtIds(prev => new Set(prev).add(item.id))
+    const commit = () =>
       save(
         { type: 'purchase', id: item.id, purchased: true, at: new Date().toISOString() },
         () => toggleGroceryPurchased(item.id, true),
         `Couldn’t tick off “${item.name}”, so it was put back on the list.`
       )
-    }
     if (prefersReducedMotion()) return commit()
 
     // Let the row play its strike-and-fade first, then move it to Bought.
@@ -216,44 +212,46 @@ export default function GroceryList({ items, overrides }: Props) {
               const menuOpen = menuId === item.id
               return (
                 <li key={item.id} className={`${styles.row} ${leaving ? styles.rowLeaving : ''}`}>
-                  <div className={styles.rowMain}>
-                    <button
-                      type="button"
-                      onClick={() => handleTick(item)}
-                      className={styles.tickArea}
-                      aria-label={`Tick off ${item.name}`}
-                    >
-                      <span className={`${styles.checkbox} ${leaving ? styles.checkboxOn : ''}`} aria-hidden>
-                        {leaving ? '✓' : ''}
-                      </span>
-                      <span className={styles.itemName}>{item.name}</span>
-                      {item.quantity && <span className={styles.quantity}>{item.quantity}</span>}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMenuId(menuOpen ? null : item.id)}
-                      aria-expanded={menuOpen}
-                      aria-label={`More options for ${item.name}`}
-                      className={styles.menuButton}
-                    >
-                      ⋯
-                    </button>
-                  </div>
-                  {menuOpen && (
-                    <div className={styles.menu}>
-                      <p className={styles.menuLabel}>Move to</p>
-                      <div className={styles.menuChips}>
-                        {GROCERY_CATEGORIES.filter(c => c !== category).map(c => (
-                          <button key={c} type="button" onClick={() => handleMove(item, c)} className={`${styles.chip} raised-sm`}>
-                            {c}
-                          </button>
-                        ))}
-                      </div>
-                      <button type="button" onClick={() => handleRemove(item)} className={styles.removeButton}>
-                        Remove from list
+                  <Reveal>
+                    <div className={styles.rowMain}>
+                      <button
+                        type="button"
+                        onClick={() => handleTick(item)}
+                        className={styles.tickArea}
+                        aria-label={`Tick off ${item.name}`}
+                      >
+                        <span className={`${styles.checkbox} ${leaving ? styles.checkboxOn : ''}`} aria-hidden>
+                          {leaving ? '✓' : ''}
+                        </span>
+                        <span className={styles.itemName}>{item.name}</span>
+                        {item.quantity && <span className={styles.quantity}>{item.quantity}</span>}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMenuId(menuOpen ? null : item.id)}
+                        aria-expanded={menuOpen}
+                        aria-label={`More options for ${item.name}`}
+                        className={styles.menuButton}
+                      >
+                        ⋯
                       </button>
                     </div>
-                  )}
+                    {menuOpen && (
+                      <div className={styles.menu}>
+                        <p className={styles.menuLabel}>Move to</p>
+                        <div className={styles.menuChips}>
+                          {GROCERY_CATEGORIES.filter(c => c !== category).map(c => (
+                            <button key={c} type="button" onClick={() => handleMove(item, c)} className={`${styles.chip} raised-sm`}>
+                              {c}
+                            </button>
+                          ))}
+                        </div>
+                        <button type="button" onClick={() => handleRemove(item)} className={styles.removeButton}>
+                          Remove from list
+                        </button>
+                      </div>
+                    )}
+                  </Reveal>
                 </li>
               )
             })}
@@ -289,19 +287,21 @@ export default function GroceryList({ items, overrides }: Props) {
           <p className={styles.hint}>Tap an item to put it back on the list.</p>
           <ul className={`${styles.list} ${styles.boughtList} raised`}>
             {bought.map(item => (
-              <li key={item.id} className={`${styles.row} ${justBoughtIds.has(item.id) ? styles.rowEntering : ''}`}>
-                <button
-                  type="button"
-                  onClick={() => handleReAdd(item)}
-                  className={styles.tickArea}
-                  aria-label={`Add ${item.name} back to the list`}
-                >
-                  <span className={`${styles.checkbox} ${styles.checkboxOn}`} aria-hidden>
-                    ✓
-                  </span>
-                  <span className={`${styles.itemName} ${styles.struck}`}>{item.name}</span>
-                  {item.quantity && <span className={`${styles.quantity} ${styles.struck}`}>{item.quantity}</span>}
-                </button>
+              <li key={item.id} className={styles.row}>
+                <Reveal>
+                  <button
+                    type="button"
+                    onClick={() => handleReAdd(item)}
+                    className={styles.tickArea}
+                    aria-label={`Add ${item.name} back to the list`}
+                  >
+                    <span className={`${styles.checkbox} ${styles.checkboxOn}`} aria-hidden>
+                      ✓
+                    </span>
+                    <span className={`${styles.itemName} ${styles.struck}`}>{item.name}</span>
+                    {item.quantity && <span className={`${styles.quantity} ${styles.struck}`}>{item.quantity}</span>}
+                  </button>
+                </Reveal>
               </li>
             ))}
           </ul>

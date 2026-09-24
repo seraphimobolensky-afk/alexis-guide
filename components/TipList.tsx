@@ -1,11 +1,22 @@
 'use client'
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import type { Bullet } from '@/lib/content'
 import { useExpandableGroup } from '@/lib/useExpandableGroup'
 import ExpandableCard from './ExpandableCard'
 import ExpandAllControl from './ExpandAllControl'
 import Bullets from './Bullets'
+import { useScrollReveal } from '@/lib/useScrollReveal'
 import styles from './TipList.module.css'
+
+function PlainTip({ num, text }: { num: ReactNode; text: string }) {
+  const [revealTarget, revealClass] = useScrollReveal<HTMLDivElement>()
+  return (
+    <div ref={revealTarget} className={`${styles.tip} raised ${revealClass}`}>
+      {num}
+      <p className={styles.text}>{text}</p>
+    </div>
+  )
+}
 
 export default function TipList({ tips }: { tips: Bullet[] }) {
   const expandableIds = useMemo(
@@ -24,12 +35,7 @@ export default function TipList({ tips }: { tips: Bullet[] }) {
           const num = <span className={`${styles.num} pressed-icon`}>{i + 1}</span>
 
           if (!tip.children || tip.children.length === 0) {
-            return (
-              <div key={i} className={`${styles.tip} raised`}>
-                {num}
-                <p className={styles.text}>{tip.text}</p>
-              </div>
-            )
+            return <PlainTip key={i} num={num} text={tip.text} />
           }
 
           const id = `tip-${i}`
