@@ -253,6 +253,9 @@
 
 .legendChipOff { color: var(--text-muted); }
 
+.lineSample { flex-shrink: 0; }
+.legendChipOff .lineSample { opacity: 0.35; }
+
 .hint {
   font-size: 13px;
   color: var(--text-muted);

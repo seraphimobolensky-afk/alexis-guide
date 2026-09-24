@@ -8,8 +8,14 @@ export const HABIT_COLORS = ['blue', 'orange', 'aqua', 'yellow', 'magenta', 'gre
 
 export type HabitColor = (typeof HABIT_COLORS)[number]
 
-/** Most lines a combined chart shows at once — past this, colours repeat. */
-export const MAX_COMBINED_SERIES = HABIT_COLORS.length
+/**
+ * Line style for the Nth habit sharing a colour on one chart (0 = first use).
+ * First use is solid; repeats get a dash, then a dot pattern.
+ */
+export function dashForRepeat(repeat: number): string | undefined {
+  if (repeat <= 0) return undefined
+  return repeat === 1 ? '6 4' : '1 4'
+}
 
 export function isHabitColor(value: unknown): value is HabitColor {
   return typeof value === 'string' && (HABIT_COLORS as readonly string[]).includes(value)

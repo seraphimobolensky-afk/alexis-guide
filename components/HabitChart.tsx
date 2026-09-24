@@ -21,6 +21,8 @@ export interface ChartSeries {
   label: string
   /** A CSS colour, e.g. `var(--habit-blue)` — resolved live, so it tracks the theme. */
   color: string
+  /** SVG dash pattern; set when this colour is already used by another line. */
+  dash?: string
 }
 
 /**
@@ -142,6 +144,7 @@ export default function HabitChart({ data, series, scale, unit, target, chartTyp
               name={s.label}
               stroke={s.color}
               strokeWidth={2}
+              strokeDasharray={s.dash}
               // The 2px ring in the background colour keeps overlapping
               // dots from different lines readable.
               dot={showDots ? { r: 4, fill: s.color, stroke: 'var(--bg)', strokeWidth: combined ? 2 : 0 } : false}

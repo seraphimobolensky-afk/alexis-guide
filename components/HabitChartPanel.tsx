@@ -4,7 +4,7 @@ import { logHabitEntry, removeHabitEntry, addHabit, updateHabit, archiveHabit, d
 import { rangeDates, todayDateString, type RangeDays } from '@/lib/habits'
 import { useLocalStorageState } from '@/lib/useLocalStorage'
 import type { HabitRecord, EntryRecord } from '@/app/guide/habits/data'
-import { HABIT_COLORS, MAX_COMBINED_SERIES, firstUnusedColor, habitColorVar, type HabitColor } from '@/lib/habitColors'
+import { HABIT_COLORS, dashForRepeat, firstUnusedColor, habitColorVar, type HabitColor } from '@/lib/habitColors'
 import HabitChart, { type ChartRow, type ChartScale, type ChartSeries } from './HabitChart'
 import HabitForm, { type HabitFormValues } from './HabitForm'
 import styles from './HabitChartPanel.module.css'
@@ -60,7 +60,6 @@ export default function HabitChartPanel({ title, storageKeyPrefix, habits, entri
   const [numInput, setNumInput] = useState('')
   const [measure, setMeasure] = useState<string | null>(null)
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => new Set())
-  const [legendNote, setLegendNote] = useState('')
   const [colorError, setColorError] = useState('')
   const [pending, startTransition] = useTransition()
 
@@ -89,13 +88,19 @@ export default function HabitChartPanel({ title, storageKeyPrefix, habits, entri
   const measures = useMemo(() => [...new Set(habits.map(measureOf))], [habits])
   const activeMeasure = measure && measures.includes(measure) ? measure : measures[0]
   const measureHabits = useMemo(() => habits.filter(h => measureOf(h) === activeMeasure), [habits, activeMeasure])
-  // Everything not hidden is drawn, up to the palette size — past that,
-  // colours would start repeating on the same chart.
-  const drawnHabits = useMemo(
-    () => measureHabits.filter(h => !hiddenIds.has(h.id)).slice(0, MAX_COMBINED_SERIES),
-    [measureHabits, hiddenIds]
-  )
-  const drawnIds = new Set(drawnHabits.map(h => h.id))
+  const drawnHabits = useMemo(() => measureHabits.filter(h => !hiddenIds.has(h.id)), [measureHabits, hiddenIds])
+  // With more habits than palette colours, colours repeat — a repeat is told
+  // apart by its dash pattern. Counted over the whole measure group (not just
+  // what's switched on) so turning a line off never restyles the others.
+  const dashById = useMemo(() => {
+    const seen: Record<string, number> = {}
+    return new Map(
+      measureHabits.map(h => {
+        const repeat = (seen[h.color] = (seen[h.color] ?? -1) + 1)
+        return [h.id, dashForRepeat(repeat)]
+      })
+    )
+  }, [measureHabits])
 
   const combinedScale: ChartScale =
     activeMeasure === 'boolean' ? 'count' : activeMeasure === 'percent' ? 'percent' : 'number'
@@ -126,6 +131,7 @@ export default function HabitChartPanel({ title, storageKeyPrefix, habits, entri
     id: h.id,
     label: h.label,
     color: habitColorVar(h.color),
+    dash: dashById.get(h.id),
   }))
 
   const combinedHasData = drawnHabits.some(h =>
@@ -133,23 +139,12 @@ export default function HabitChartPanel({ title, storageKeyPrefix, habits, entri
   )
 
   function toggleLegendHabit(habitId: string) {
-    setLegendNote('')
-    if (drawnIds.has(habitId)) {
-      setHiddenIds(prev => new Set(prev).add(habitId))
-    } else if (drawnHabits.length >= MAX_COMBINED_SERIES) {
-      setLegendNote(`Up to ${MAX_COMBINED_SERIES} lines at a time — turn one off first.`)
-    } else {
-      // Un-hide it, and move it ahead of any not-yet-hidden overflow habits
-      // so it's the one that actually gets drawn.
-      setHiddenIds(prev => {
-        const next = new Set(prev)
-        next.delete(habitId)
-        measureHabits.forEach(h => {
-          if (h.id !== habitId && !drawnIds.has(h.id)) next.add(h.id)
-        })
-        return next
-      })
-    }
+    setHiddenIds(prev => {
+      const next = new Set(prev)
+      if (next.has(habitId)) next.delete(habitId)
+      else next.add(habitId)
+      return next
+    })
   }
 
   function handleColorChange(habitId: string, color: HabitColor) {
@@ -297,10 +292,7 @@ export default function HabitChartPanel({ title, storageKeyPrefix, habits, entri
                       <button
                         key={m}
                         type="button"
-                        onClick={() => {
-                          setMeasure(m)
-                          setLegendNote('')
-                        }}
+                        onClick={() => setMeasure(m)}
                         aria-pressed={activeMeasure === m}
                         className={`${styles.segment} ${activeMeasure === m ? styles.segmentActive + ' pressed-sm' : ''}`}
                       >
@@ -328,7 +320,7 @@ export default function HabitChartPanel({ title, storageKeyPrefix, habits, entri
 
               <div className={styles.legend} role="group" aria-label="Lines shown on the chart">
                 {measureHabits.map(h => {
-                  const on = drawnIds.has(h.id)
+                  const on = !hiddenIds.has(h.id)
                   return (
                     <button
                       key={h.id}
@@ -337,17 +329,25 @@ export default function HabitChartPanel({ title, storageKeyPrefix, habits, entri
                       aria-pressed={on}
                       className={`${styles.legendChip} ${on ? '' : styles.legendChipOff}`}
                     >
-                      <span
-                        className={styles.colorDot}
-                        style={on ? { background: habitColorVar(h.color) } : { boxShadow: `inset 0 0 0 2px ${habitColorVar(h.color)}` }}
-                        aria-hidden
-                      />
+                      {/* A sample of the actual line (colour + dash), so repeated
+                          colours stay identifiable from the key. */}
+                      <svg width="20" height="10" aria-hidden className={styles.lineSample}>
+                        <line
+                          x1="1"
+                          y1="5"
+                          x2="19"
+                          y2="5"
+                          stroke={habitColorVar(h.color)}
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeDasharray={dashById.get(h.id)}
+                        />
+                      </svg>
                       {h.label}
                     </button>
                   )
                 })}
               </div>
-              {legendNote && <p className={styles.hint}>{legendNote}</p>}
 
               {drawnHabits.length === 0 ? (
                 <p className={styles.empty}>All lines are turned off — tap a habit above to show it.</p>
