@@ -370,6 +370,7 @@ Rebuilt and re-linted clean after both changes.
   - Habits only share a chart if they share a y-axis (no dual-axis charts), so the combined view groups by measure: tick-offs, percentages, or numbers per unit (km and minutes never mix). A switcher appears when a panel has more than one kind.
   - Tick-off habits plot as a running total of times done in the range (stepped lines), since overlapping 0/1 lines would be unreadable.
   - All habits start switched on. There are more habits than palette colours (cleaning has 11), so a habit whose colour is already used earlier in the same chart is drawn dashed (a third use would be dotted). The key shows a sample of each line (colour + dash) instead of a dot. Dash styles are counted over the whole group, not just visible lines, so toggling one line never restyles another. *(Revised same day: originally capped at 8 lines with the last 3 switched off.)*
+  - The running-total y-axis tops out at the highest count on the chart (minimum 1), in even whole-number steps (at most ~4). Left alone, recharts padded it to 5 ticks, so an all-zero chart read a meaningless 0–4.
   - Combined view is line-only; logging and recolouring happen in the single-habit view.
 - The page and "add habit" keep working before the SQL below is run (they fall back to default colours on Postgres error 42703); only saving a colour change needs it.
 - Verified with `npm run build`, `tsc`, lint, and headless-Chrome screenshots of a temporary sample-data page at 390px in both themes (page deleted afterwards).

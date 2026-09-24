@@ -50,8 +50,17 @@ export default function HabitChart({ data, series, scale, unit, target, chartTyp
   const ticks = pickTickDates(dates, 6)
   const combined = series.length > 1
 
+  // Running totals: top out at the highest count actually on the chart (at
+  // least 1), one tick per whole number. Left to itself recharts pads the
+  // axis to ~5 ticks, so an all-zero chart would show a meaningless 0–4.
+  // Steps stay even (at most ~4 of them), so a top value of 7 reads 0–2–4–6–8.
+  const countMax = scale === 'count' ? Math.max(1, ...data.flatMap(row => series.map(s => Number(row[s.id]) || 0))) : 0
+  const countStep = Math.ceil(countMax / 4) || 1
+  const countTop = Math.ceil(countMax / countStep) * countStep
+  const countTicks = scale === 'count' ? Array.from({ length: countTop / countStep + 1 }, (_, i) => i * countStep) : undefined
+
   const yDomain: [number, number] | undefined =
-    scale === 'done' ? [0, 1] : scale === 'percent' ? [0, 100] : undefined
+    scale === 'done' ? [0, 1] : scale === 'percent' ? [0, 100] : scale === 'count' ? [0, countTop] : undefined
 
   function formatValue(value: number) {
     if (scale === 'done') return value === 1 ? 'Done' : 'Not done'
@@ -85,6 +94,7 @@ export default function HabitChart({ data, series, scale, unit, target, chartTyp
       <YAxis
         domain={yDomain}
         allowDecimals={scale === 'percent' || scale === 'number'}
+        ticks={countTicks}
         tickFormatter={yTickFormatter}
         tick={axisTickStyle}
         axisLine={{ stroke: 'var(--border)' }}
