@@ -222,3 +222,69 @@
   color: white;
   cursor: pointer;
 }
+
+.colorDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.legend {
+  display: flex;
+  gap: 4px 14px;
+  flex-wrap: wrap;
+}
+
+.legendChip {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0;
+  font-size: 13px;
+  font-family: var(--font);
+  color: var(--text-primary);
+}
+
+.legendChipOff { color: var(--text-muted); }
+
+.hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.colorRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.swatches {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* 26px visible swatch inside a 36px tap target (the background-coloured border). */
+.swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 5px solid var(--bg);
+  background-clip: padding-box !important;
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatchActive {
+  box-shadow: 0 0 0 2px var(--text-primary);
+}
+
+.swatch:disabled { cursor: default; }

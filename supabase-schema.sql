@@ -120,3 +120,8 @@ create index if not exists grocery_items_user_purchased_idx on grocery_items(use
 grant select, insert, update, delete on habits        to authenticated;
 grant select, insert, update, delete on habit_entries to authenticated;
 grant select, insert, update, delete on grocery_items to authenticated;
+
+-- ─── Per-habit chart colour ──────────────────────────────────────────────────
+-- One of the palette names in lib/habitColors.ts. Null means "use the default
+-- for this habit's position in its group".
+alter table habits add column if not exists color text;

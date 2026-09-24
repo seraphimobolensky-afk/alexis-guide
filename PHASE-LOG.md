@@ -357,3 +357,23 @@ Rebuilt and re-linted clean after both changes.
 **Files touched:** `supabase-schema.sql`, `app/guide/cleaning/data.ts`
 
 **Anything to click:** run the three `grant` lines in the Supabase SQL editor.
+
+---
+
+## Phase 8.1 — Per-habit colours + "All on one chart"
+**Date:** 2026-09-24
+
+**What changed:**
+- Every habit now has its own colour, drawn from a fixed 8-colour palette (`lib/habitColors.ts`, hex values as `--habit-*` tokens in `globals.css`, with separate light/dark steps). The palette and its order were run through a colourblind-separation validator against this app's actual backgrounds (`#EBEBEB` / `#23262b`): all checks pass in both themes. Four colours sit below 3:1 contrast on the light background, which is why the combined chart always has a legend and the tooltip names each line.
+- Default colours go by position in the group; new habits get the first colour not already used. Any habit, including the cleaning ones, can be recoloured from a "Colour" row under its chart. Saved in a new nullable `habits.color` column.
+- New "All on one chart" option in each panel's picker: one line per habit, with legend chips to turn lines on/off. Rules:
+  - Habits only share a chart if they share a y-axis (no dual-axis charts), so the combined view groups by measure: tick-offs, percentages, or numbers per unit (km and minutes never mix). A switcher appears when a panel has more than one kind.
+  - Tick-off habits plot as a running total of times done in the range (stepped lines), since overlapping 0/1 lines would be unreadable.
+  - Max 8 lines at once (the palette size). The cleaning group has 11 habits, so the last 3 start switched off, and habits 9–11 repeat colours 1–3 by default until recoloured.
+  - Combined view is line-only; logging and recolouring happen in the single-habit view.
+- The page and "add habit" keep working before the SQL below is run (they fall back to default colours on Postgres error 42703); only saving a colour change needs it.
+- Verified with `npm run build`, `tsc`, lint, and headless-Chrome screenshots of a temporary sample-data page at 390px in both themes (page deleted afterwards).
+
+**Files touched:** `lib/habitColors.ts` (new), `app/globals.css`, `components/HabitChart.tsx`, `components/HabitChartPanel.tsx`, `components/HabitChartPanel.module.css`, `app/guide/habits/data.ts`, `app/actions.ts`, `supabase-schema.sql`
+
+**Anything to click:** run `alter table habits add column if not exists color text;` in the Supabase SQL editor.

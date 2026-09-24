@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { todayDateString, type Cadence } from '@/lib/habits'
+import type { HabitColor } from '@/lib/habitColors'
 
 async function requireUser() {
   const supabase = await createClient()
@@ -65,25 +66,28 @@ export async function addHabit(input: {
   cadence?: Cadence
   group?: 'cleaning' | 'custom'
   sortOrder?: number
+  color?: HabitColor
 }) {
   const { supabase, user } = await requireUser()
 
-  const { data, error } = await supabase
-    .from('habits')
-    .insert({
-      user_id: user.id,
-      key: input.key,
-      label: input.label,
-      icon: input.icon ?? null,
-      value_type: input.valueType ?? 'boolean',
-      unit: input.unit ?? null,
-      target: input.target ?? null,
-      cadence: input.cadence ?? 'weekly',
-      group: input.group ?? 'custom',
-      sort_order: input.sortOrder ?? 0,
-    })
-    .select()
-    .single()
+  const insertHabit = (row: Record<string, unknown>) => supabase.from('habits').insert(row).select().single()
+
+  const row = {
+    user_id: user.id,
+    key: input.key,
+    label: input.label,
+    icon: input.icon ?? null,
+    value_type: input.valueType ?? 'boolean',
+    unit: input.unit ?? null,
+    target: input.target ?? null,
+    cadence: input.cadence ?? 'weekly',
+    group: input.group ?? 'custom',
+    sort_order: input.sortOrder ?? 0,
+  }
+  let { data, error } = await insertHabit(input.color ? { ...row, color: input.color } : row)
+  // 42703 = the `color` column doesn't exist yet (migration not run) — save
+  // without it; the habit just gets its default colour.
+  if (error?.code === '42703') ({ data, error } = await insertHabit(row))
 
   revalidatePath('/guide/cleaning')
   revalidatePath('/guide/habits')
@@ -96,6 +100,7 @@ export async function updateHabit(habitId: string, input: {
   unit?: string
   target?: number | null
   cadence?: Cadence
+  color?: HabitColor
 }) {
   const { supabase, user } = await requireUser()
 
@@ -105,6 +110,7 @@ export async function updateHabit(habitId: string, input: {
   if (input.unit !== undefined) patch.unit = input.unit || null
   if (input.target !== undefined) patch.target = input.target
   if (input.cadence !== undefined) patch.cadence = input.cadence
+  if (input.color !== undefined) patch.color = input.color
 
   const { error } = await supabase
     .from('habits')

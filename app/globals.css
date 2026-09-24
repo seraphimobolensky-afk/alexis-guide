@@ -20,6 +20,17 @@
   --danger: #b3261e;
   --border: rgba(0, 0, 0, 0.08);
 
+  /* Habit chart series colours — validated as a colourblind-safe categorical
+     set (in this order) against --bg in each theme. Text never uses these. */
+  --habit-blue: #2a78d6;
+  --habit-orange: #eb6834;
+  --habit-aqua: #1baf7a;
+  --habit-yellow: #eda100;
+  --habit-magenta: #e87ba4;
+  --habit-green: #008300;
+  --habit-violet: #4a3aa7;
+  --habit-red: #e34948;
+
   --shadow-raised: 6px 6px 14px rgba(13,39,80,0.15), -5px -5px 11px rgba(255,255,255,0.9);
   --shadow-raised-sm: 4px 4px 9px rgba(13,39,80,0.13), -3px -3px 7px rgba(255,255,255,0.9);
   --shadow-pressed: inset -3px -3px 7px rgba(255,255,255,0.64), inset 3px 3px 7px rgba(13,39,80,0.14);
@@ -51,6 +62,15 @@
     --danger: #ff8a80;
     --border: rgba(255, 255, 255, 0.08);
 
+    --habit-blue: #3987e5;
+    --habit-orange: #d95926;
+    --habit-aqua: #199e70;
+    --habit-yellow: #c98500;
+    --habit-magenta: #d55181;
+    --habit-green: #008300;
+    --habit-violet: #9085e9;
+    --habit-red: #e66767;
+
     --shadow-raised: 6px 6px 14px rgba(0,0,0,0.45), -5px -5px 11px rgba(255,255,255,0.045);
     --shadow-raised-sm: 4px 4px 9px rgba(0,0,0,0.4), -3px -3px 7px rgba(255,255,255,0.04);
     --shadow-pressed: inset -3px -3px 7px rgba(255,255,255,0.035), inset 3px 3px 7px rgba(0,0,0,0.5);
@@ -70,6 +90,15 @@
   --accent: #e08a6f;
   --danger: #ff8a80;
   --border: rgba(255, 255, 255, 0.08);
+
+  --habit-blue: #3987e5;
+  --habit-orange: #d95926;
+  --habit-aqua: #199e70;
+  --habit-yellow: #c98500;
+  --habit-magenta: #d55181;
+  --habit-green: #008300;
+  --habit-violet: #9085e9;
+  --habit-red: #e66767;
 
   --shadow-raised: 6px 6px 14px rgba(0,0,0,0.45), -5px -5px 11px rgba(255,255,255,0.045);
   --shadow-raised-sm: 4px 4px 9px rgba(0,0,0,0.4), -3px -3px 7px rgba(255,255,255,0.04);
