@@ -378,3 +378,26 @@ Rebuilt and re-linted clean after both changes.
 **Files touched:** `lib/habitColors.ts` (new), `app/globals.css`, `components/HabitChart.tsx`, `components/HabitChartPanel.tsx`, `components/HabitChartPanel.module.css`, `app/guide/habits/data.ts`, `app/actions.ts`, `supabase-schema.sql`
 
 **Anything to click:** run `alter table habits add column if not exists color text;` in the Supabase SQL editor.
+
+---
+
+## Phase 9 — Grocery list with automatic grouping
+**Date:** 2026-09-24
+
+**What changed:**
+- New route `/guide/grocery-list`, enabled in the nav under "Food" (it was a disabled "Soon" placeholder since Phase 4), and linked from the "Planning groceries" section ("Open your grocery list →"), with a link back to the tips.
+- **Auto-grouping** in `lib/groceryCategories.ts`: an offline keyword lookup (~400 English terms plus common German/Dutch ones), no AI or network. Input is normalised (lowercase, accents/umlauts stripped); keywords match whole words with plural tolerance ("berries" → berry, "tomatoes" → tomato), multi-word keywords match as phrases, and the longest matching keyword wins ("ice cream" → Frozen, not Dairy; "peanut butter" → Pantry, not Dairy).
+  - **A deliberate departure from "substring" matching:** plain substrings misfire badly ("ham" in "shampoo", "oil" in "toilet", "tea" in "steak"). So short keywords match whole words only, and keywords of 4+ letters also match as the *end* of a longer word, which is how German/Dutch compounds work ("Vollmilch" → milch, "Roggenbrot" → brot).
+  - Checked against the spec's test list (milk, bananas, chicken, toilet paper, pasta, ice cream, crisps, bread, beer, shampoo → all sensible groups) and ~25 tricky cases. "harissa" deliberately isn't a keyword, so the spec's "move it to Pantry" check works.
+- **Quantity parsing** (loose, as asked): a number with an optional unit at the start or end, or anything in brackets at the end: "2 kg rice", "2x milk", "eggs x20", "milk 2l", "rice (2kg)". Anything else is just the name.
+- **Remembered category moves: a departure from the spec's storage suggestion.** The spec said to store the override in the `grocery_items` row. But "Clear history" deletes bought rows, which would make the app forget every correction. So overrides live in a new small table, `grocery_category_overrides` (user, normalised name → category), and are applied before the keyword lookup when an item is added.
+- **The page:** one input (sticky under the nav bar, so it's reachable while scrolling and, being at the top, not covered by the keyboard); focus stays in it after each add for fast entry. Items grouped in shopping order (Produce first, Household, then Other last) with a count per group and a total. The whole row is the tap target (56px tall). A "⋯" button per row opens "Move to" category chips and "Remove from list". I used a menu button, not long-press, because long-press clashes with tap-to-tick and scrolling on phones.
+- **Ticking:** the row strikes through and slides out (220ms), then moves to **Bought** (newest first, struck through), where it fades in. Tapping a bought item puts it back on the list. "Clear history" has an inline confirm. Motion is skipped under reduced-motion settings.
+- **Instant + rollback:** every change (add, tick, re-add, move, remove, clear) uses React's `useOptimistic`: the screen updates immediately, the save runs in the background, and if it fails the change reverts on its own and a message says what was undone ("Couldn't tick off 'milk', so it was put back on the list…").
+- New server actions `setGroceryCategory` (updates the row + upserts the override) and `removeGroceryItem`; the Phase 7 grocery actions are reused as-is.
+- Verified with `npm run build`, `tsc`, lint, a node run of the categoriser/parser on test inputs, and headless-Chrome screenshots of a temporary sample-data page at 390px (deleted afterwards). With no signed-in user there, every save fails, which exercised the rollback path: an added item appeared instantly in the right group, then was removed with the error message; a ticked item came back the same way.
+- **Not verified:** real saves against Supabase, the sticky input with the on-screen keyboard on a real phone, and how the tick animation feels on a phone.
+
+**Files touched:** `lib/groceryCategories.ts` (new), `components/GroceryList.tsx` + `.module.css` (new), `app/guide/grocery-list/{page.tsx,data.ts,groceryList.module.css}` (new), `app/guide/groceries/page.tsx` + `groceries.module.css`, `app/actions.ts`, `lib/navGroups.ts`, `supabase-schema.sql`
+
+**Anything to click:** run the `grocery_category_overrides` block from the end of `supabase-schema.sql` in the Supabase SQL editor.

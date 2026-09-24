@@ -1,0 +1,20 @@
+.tipsLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.loadError {
+  background: var(--bg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-raised);
+  padding: 20px;
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}

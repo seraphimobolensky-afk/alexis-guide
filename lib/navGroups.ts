@@ -19,9 +19,8 @@ function sectionLink(key: string): NavLinkConfig {
 }
 
 /**
- * CardNav shows at most 3 groups. `grocery-list` (Phase 9) doesn't have a
- * route yet — it's flagged `disabled` so it renders as a non-navigating
- * placeholder instead of a dead link. `habits` shipped in Phase 8.
+ * CardNav shows at most 3 groups. `habits` (Phase 8) and `grocery-list`
+ * (Phase 9) aren't content sections, so they're plain links.
  */
 export const navGroups: NavGroupConfig[] = [
   {
@@ -37,7 +36,7 @@ export const navGroups: NavGroupConfig[] = [
     label: 'Food',
     links: [
       sectionLink('groceries'),
-      { key: 'grocery-list', label: 'Grocery list', href: '/guide/grocery-list', disabled: true },
+      { key: 'grocery-list', label: 'Grocery list', href: '/guide/grocery-list' },
       sectionLink('recipes'),
     ],
   },

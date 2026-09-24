@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { todayDateString, type Cadence } from '@/lib/habits'
 import type { HabitColor } from '@/lib/habitColors'
+import { isGroceryCategory, normalizeGroceryName, type GroceryCategory } from '@/lib/groceryCategories'
 
 async function requireUser() {
   const supabase = await createClient()
@@ -198,6 +199,45 @@ export async function clearPurchasedGroceries() {
     .delete()
     .eq('user_id', user.id)
     .eq('purchased', true)
+
+  revalidatePath('/guide/grocery-list')
+  return { error: error?.message }
+}
+
+/**
+ * Move an item to a different category, and remember that choice for its
+ * name so the same item lands there automatically next time.
+ */
+export async function setGroceryCategory(itemId: string, name: string, category: GroceryCategory) {
+  const { supabase, user } = await requireUser()
+  if (!isGroceryCategory(category)) return { error: 'Unknown category' }
+
+  const { error } = await supabase
+    .from('grocery_items')
+    .update({ category })
+    .eq('id', itemId)
+    .eq('user_id', user.id)
+  if (error) return { error: error.message }
+
+  const { error: overrideError } = await supabase
+    .from('grocery_category_overrides')
+    .upsert(
+      { user_id: user.id, term: normalizeGroceryName(name), category, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,term' }
+    )
+
+  revalidatePath('/guide/grocery-list')
+  return { error: overrideError?.message }
+}
+
+export async function removeGroceryItem(itemId: string) {
+  const { supabase, user } = await requireUser()
+
+  const { error } = await supabase
+    .from('grocery_items')
+    .delete()
+    .eq('id', itemId)
+    .eq('user_id', user.id)
 
   revalidatePath('/guide/grocery-list')
   return { error: error?.message }

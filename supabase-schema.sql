@@ -125,3 +125,27 @@ grant select, insert, update, delete on grocery_items to authenticated;
 -- One of the palette names in lib/habitColors.ts. Null means "use the default
 -- for this habit's position in its group".
 alter table habits add column if not exists color text;
+
+-- ─── Phase 9: remembered grocery categories ──────────────────────────────────
+-- When an item is moved to a different category by hand, that choice is saved
+-- here against the item's normalised name, and reused the next time the same
+-- item is added. Kept separate from grocery_items so clearing the "Bought"
+-- history doesn't make the app forget the correction.
+create table if not exists grocery_category_overrides (
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  term        text not null,
+  category    text not null,
+  updated_at  timestamptz default now(),
+  primary key (user_id, term)
+);
+
+alter table grocery_category_overrides enable row level security;
+
+drop policy if exists "Users manage their own grocery overrides" on grocery_category_overrides;
+create policy "Users manage their own grocery overrides"
+  on grocery_category_overrides
+  for all
+  using  (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+grant select, insert, update, delete on grocery_category_overrides to authenticated;

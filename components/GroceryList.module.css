@@ -1,0 +1,319 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Sticks just under the (sticky) card nav, so the input is always one tap
+   away while scrolling a long list — and, being at the top of the screen,
+   it's never covered by the on-screen keyboard. */
+.inputBar {
+  position: sticky;
+  top: calc(84px + env(safe-area-inset-top));
+  z-index: 30;
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+  background: var(--bg);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  outline: none;
+  padding: 12px 18px;
+  min-height: 52px;
+  font-size: 16px; /* 16px+ stops iOS zooming in on focus */
+  font-family: var(--font);
+  color: var(--text-primary);
+}
+
+.input::placeholder { color: var(--text-muted); }
+.input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.addButton {
+  background: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 0 20px;
+  min-height: 52px;
+  font-size: 15px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.addButton:disabled { color: var(--text-muted); cursor: default; }
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  justify-content: space-between;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-pressed-sm);
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--danger);
+}
+
+.errorDismiss {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.total {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.groupHeading {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.count {
+  font-size: 12px;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.list {
+  list-style: none;
+  background: var(--bg);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.row {
+  border-top: 1px solid var(--border);
+}
+
+.row:first-child { border-top: none; }
+
+.rowMain {
+  display: flex;
+  align-items: stretch;
+}
+
+/* The whole row (not just the checkbox) is the tap target. */
+.tickArea {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tickArea:active { background: var(--border); }
+
+.checkbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: var(--shadow-pressed-sm);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--bg);
+  transition: background-color 120ms ease-out;
+}
+
+.checkboxOn {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+.itemName {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.quantity {
+  font-size: 14px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.struck {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.menuButton {
+  width: 52px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.menu {
+  padding: 4px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menuLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.menuChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  background: var(--bg);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 14px;
+  min-height: 40px;
+  font-size: 13px;
+  font-family: var(--font);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.removeButton {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  min-height: 44px;
+  font-size: 14px;
+  font-family: var(--font);
+  color: var(--danger);
+  cursor: pointer;
+}
+
+/* Ticking: strike through and fade/slide out, then the row moves to Bought. */
+.rowLeaving .itemName {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.rowLeaving {
+  animation: rowLeave 220ms ease-in forwards;
+}
+
+@keyframes rowLeave {
+  to { opacity: 0; transform: translateX(12px); }
+}
+
+.rowEntering {
+  animation: rowEnter 240ms ease-out;
+}
+
+@keyframes rowEnter {
+  from { opacity: 0; transform: translateY(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rowLeaving, .rowEntering { animation: none; }
+}
+
+.boughtSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.boughtHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.boughtList .itemName { font-size: 15px; }
+
+.hint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.clearButton {
+  background: none;
+  border: none;
+  min-height: 44px;
+  font-size: 14px;
+  font-family: var(--font);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.clearButton:hover { color: var(--accent); }
+
+.confirm {
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-pressed-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.confirmActions {
+  display: flex;
+  gap: 12px;
+}
+
+.confirmDanger {
+  background: var(--danger);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 10px 16px;
+  min-height: 44px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: white;
+  cursor: pointer;
+}
