@@ -453,3 +453,18 @@ Rebuilt and re-linted clean after both changes.
 **Also:** the dev-mode hydration warning about `data-theme` is fixed (`suppressHydrationWarning` on `<html>` only, since the theme script sets it before React loads). The developer-facing "Debug details / Phase 7 migration" text on the cleaning and grocery error states is replaced with a plain "try reloading" message; the details still go to the server log.
 
 **Files touched:** `app/globals.css`, `app/layout.tsx`, `app/guide/layout.tsx`, `app/auth/not-invited/route.ts` (new), `app/login/page.tsx`, `lib/auth.ts`, `components/SpecularButton.tsx`, `components/CardNav.tsx` + `.css`, `components/HabitChart.tsx`, `components/CleaningList.tsx`, `app/guide/cleaning/{page.tsx,data.ts}`, `app/guide/habits/data.ts`, `app/guide/grocery-list/page.tsx`, `components/{GroceryList,HabitChartPanel}.module.css`, `components/HabitForm.module.css`, `app/auth/auth.module.css`, `app/login/login.module.css`, `README.md`, `package.json`/`package-lock.json`; deleted `postcss.config.mjs` and `public/*.svg`.
+
+---
+
+## Post-launch — SeraSays logo as favicon and home-screen icon
+**Date:** 2026-09-26
+
+**What changed:**
+- Added the SeraSays seal icons (from the designer's zip) to `public/favicons/`, in two variants chosen by the **device's** colour scheme: cream seal on green (#1F3A30) in light mode, green seal on cream (#EFE6D6) in dark mode. They follow the device rather than the in-app theme toggle because they live in the browser's own UI (tab bar, home screen), not in the page.
+- `app/layout.tsx` metadata: SVG favicons per scheme, 32px PNG fallbacks per scheme, a multi-size `.ico` fallback, and 180×180 apple-touch-icons per scheme (the iPhone home-screen icon). `appleWebApp` makes the site open full-screen from the home screen with the name "Alexis's Guide". Removed Next.js's default `app/favicon.ico`, which was what showed in the tab before; `public/favicon.ico` is now the light-mode seal for browsers that request `/favicon.ico` directly.
+- New `app/manifest.ts` (`/manifest.webmanifest`) for Android/desktop "Install app": standalone display, opens on `/guide/welcome`, 192/512 icons. Manifests can't switch by colour scheme, so it uses the light-mode (cream-on-green) seal.
+- `viewport`: `viewport-fit=cover`, so home-screen mode uses the full screen (safe-area padding was already in place), and `theme-color` set to the page background per scheme (#EBEBEB / #23262b) so browser UI blends into the app. This deliberately departs from the zip's README, which suggested the logo colours; those would put a green or cream bar above the grey page.
+- Verified: every icon/manifest URL returns 200 with the right content type; headless Chrome picks the light icons under light mode and the dark icons under dark mode; build and lint pass.
+- **Note:** a home-screen icon is captured once when it's added and won't switch afterwards. Anyone who added the site to their home screen before this change needs to remove it and add it again.
+
+**Files touched:** `public/favicons/*` (new), `public/favicon.ico` (new), `app/manifest.ts` (new), `app/layout.tsx`; deleted `app/favicon.ico`.
