@@ -87,8 +87,13 @@
 
 
 .logo-text {
-  font-size: 15px;
+  /* SeraSays wordmark, in the logo's typeface (loaded in app/layout.tsx);
+     Bodoni 72 / Didot are close system fallbacks on Apple devices. */
+  font-family: var(--font-brand), 'Bodoni 72', Didot, 'Bodoni MT', serif;
+  font-style: italic;
+  font-size: 22px;
   font-weight: 500;
+  line-height: 1;
   color: var(--text-primary);
   white-space: nowrap;
 }

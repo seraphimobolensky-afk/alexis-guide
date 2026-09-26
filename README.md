@@ -1,6 +1,6 @@
-# Alexis's Guide
+# SeraSays
 
-A personal guide to living alone, written by Sera for Alexis. Built with Next.js 16, React 19, CSS Modules and Supabase, deployed on Vercel.
+A personal guide to living alone, written by Sera for Alexis (the repo is still named `alexis-guide`). Built with Next.js 16, React 19, CSS Modules and Supabase, deployed on Vercel.
 
 ---
 

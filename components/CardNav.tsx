@@ -32,7 +32,7 @@ const TOP_BAR_HEIGHT = 60
 const CONTENT_PADDING = 16
 
 const CardNav: React.FC<CardNavProps> = ({
-  brandLabel = "Alexis's Guide",
+  brandLabel = 'SeraSays',
   brandHref = '/guide/welcome',
   items,
   actions,

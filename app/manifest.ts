@@ -7,8 +7,8 @@ import type { MetadataRoute } from 'next'
 // well on both light and dark home screens.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Alexis's Guide",
-    short_name: "Alexis's Guide",
+    name: 'SeraSays',
+    short_name: 'SeraSays',
     description: 'A guide to living alone — from Sera',
     start_url: '/guide/welcome',
     display: 'standalone',

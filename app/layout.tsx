@@ -1,5 +1,17 @@
 import type { Metadata, Viewport } from 'next'
+import { Bodoni_Moda } from 'next/font/google'
 import './globals.css'
+
+// The SeraSays wordmark face: the logo's "S" is Bodoni Moda Italic (weight
+// ~500). Only the brand name uses it (see .logo-text in CardNav.css).
+// next/font self-hosts it, so pages make no request to Google Fonts.
+const brandFont = Bodoni_Moda({
+  subsets: ['latin'],
+  style: 'italic',
+  weight: '500',
+  display: 'swap',
+  variable: '--font-brand',
+})
 
 // SeraSays seal icons (public/favicons/), in two variants picked by the
 // device's colour scheme: cream-on-green for light mode, green-on-cream for
@@ -9,7 +21,7 @@ const light = '(prefers-color-scheme: light)'
 const dark = '(prefers-color-scheme: dark)'
 
 export const metadata: Metadata = {
-  title: "Alexis's Guide",
+  title: 'SeraSays',
   description: 'A guide to living alone — from Sera',
   icons: {
     icon: [
@@ -26,10 +38,10 @@ export const metadata: Metadata = {
     ],
   },
   // Added to an iPhone home screen, it opens full-screen like an app, named
-  // "Alexis's Guide" under the icon.
+  // "SeraSays" under the icon.
   appleWebApp: {
     capable: true,
-    title: "Alexis's Guide",
+    title: 'SeraSays',
     statusBarStyle: 'default',
   },
 }
@@ -63,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // The init script sets data-theme before React hydrates (to avoid a
     // flash of the wrong theme), so the attribute legitimately differs from
     // the server HTML — suppressHydrationWarning covers only this element.
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={brandFont.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>

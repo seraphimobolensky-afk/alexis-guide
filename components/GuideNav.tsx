@@ -28,7 +28,7 @@ export default function GuideNav() {
   return (
     <CardNav
       items={items}
-      brandLabel="Alexis's Guide"
+      brandLabel="SeraSays"
       brandHref="/guide/welcome"
       actions={
         <>

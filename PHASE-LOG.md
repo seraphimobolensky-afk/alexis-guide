@@ -468,3 +468,16 @@ Rebuilt and re-linted clean after both changes.
 - **Note:** a home-screen icon is captured once when it's added and won't switch afterwards. Anyone who added the site to their home screen before this change needs to remove it and add it again.
 
 **Files touched:** `public/favicons/*` (new), `public/favicon.ico` (new), `app/manifest.ts` (new), `app/layout.tsx`; deleted `app/favicon.ico`.
+
+---
+
+## Post-launch — App renamed to SeraSays, wordmark in the logo's typeface
+**Date:** 2026-09-26
+
+**What changed:**
+- Renamed the app from "Alexis's Guide" to **SeraSays** everywhere the name appears: browser tab title, iPhone home-screen label (`appleWebApp.title`), install manifest (`name`/`short_name`), and the nav bar wordmark. The welcome letter and login greetings ("Hey Alexis", "Hi Lesch!") are content, not the app name, so they're unchanged.
+- **Font:** rendered Bodoni Moda upright and italic next to the logo's "S". The logo is **Bodoni Moda Italic** (the upright doesn't slant and its terminals differ), closest at weight 500. Loaded with `next/font/google` (self-hosted at build time, no Google request from visitors' browsers) as `--font-brand`, and used only for the nav wordmark (`.logo-text`, 22px italic), with Bodoni 72 / Didot as fallbacks. Everything else keeps the existing font.
+- The tab title and home-screen label are drawn by the browser/phone in its own system font; a web page can't change that.
+- Verified in headless Chrome (light + dark): the wordmark reads "SeraSays" in Bodoni Moda Italic (`document.fonts.check` true), and the tab title is "SeraSays".
+
+**Files touched:** `app/layout.tsx`, `app/manifest.ts`, `components/CardNav.tsx`, `components/CardNav.css`, `components/GuideNav.tsx`, `README.md`
