@@ -229,3 +229,35 @@ update grocery_items set base_quantity = quantity
 
 grant select, insert, update, delete on meal_plans       to authenticated;
 grant select, insert, update, delete on meal_ingredients to authenticated;
+
+-- ─── Your own recipes ────────────────────────────────────────────────────────
+-- Recipes Alexis adds himself, shown on the recipes page next to the ones in
+-- lib/content.ts and suggested in the meal planner. A meal picked from one
+-- stores recipe_key = 'mine-<id>'; deleting the recipe leaves those meals as
+-- they are (just without the "View recipe" link).
+create table if not exists user_recipes (
+  id           uuid default gen_random_uuid() primary key,
+  user_id      uuid references auth.users(id) on delete cascade not null,
+  title        text not null,
+  emoji        text not null default '🍽️',
+  intro        text,
+  -- [{ "name": "beef mince", "quantity": "500g" }, …] in list order.
+  ingredients  jsonb not null default '[]'::jsonb,
+  -- ["Brown the mince", …] in order.
+  steps        jsonb not null default '[]'::jsonb,
+  created_at   timestamptz default now(),
+  updated_at   timestamptz default now()
+);
+
+alter table user_recipes enable row level security;
+
+drop policy if exists "Users manage their own recipes" on user_recipes;
+create policy "Users manage their own recipes"
+  on user_recipes
+  for all
+  using  (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create index if not exists user_recipes_user_idx on user_recipes(user_id);
+
+grant select, insert, update, delete on user_recipes to authenticated;

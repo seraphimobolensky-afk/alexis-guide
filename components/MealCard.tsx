@@ -14,6 +14,7 @@ import {
 } from '@/lib/mealPlan'
 import { findRecipe, recipeIngredients, recipeMealName, suggestRecipes } from '@/lib/mealRecipes'
 import type { Recipe } from '@/lib/content'
+import { isUserRecipeKey, splitIngredientLines } from '@/lib/userRecipes'
 import styles from './MealCard.module.css'
 
 export type SaveResult = { meal?: Meal; error?: string }
@@ -25,6 +26,8 @@ interface Props {
   today: string
   /** The meal already in this slot, if any. */
   meal: Meal | undefined
+  /** What the name field suggests: Alexis's own recipes, then the guide's. */
+  recipes: Recipe[]
   /** Saves optimistically; the promise settles once the server has answered. */
   onSave: (input: MealInput) => Promise<SaveResult>
   onDelete: (meal: { id: string; date: string; slot: MealSlot; name: string }, groceryChoice: GroceryChoice) => void
@@ -104,11 +107,31 @@ function fingerprint(draft: Draft): string {
   return JSON.stringify([d.name, d.notes, d.recipeKey, d.ingredients.map(i => [i.name, i.quantity, i.addToGroceries, !!i.relink])])
 }
 
+/**
+ * Drop the click that follows a tap already handled on pointer up. The list
+ * closes on that pointer up, so otherwise the click lands on whatever is now
+ * under the finger (an ingredient, opening it for editing). Gives up after a
+ * moment in case no click comes.
+ */
+function swallowNextClick() {
+  const swallow = (e: MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    stop()
+  }
+  const stop = () => {
+    document.removeEventListener('click', swallow, true)
+    clearTimeout(timer)
+  }
+  document.addEventListener('click', swallow, true)
+  const timer = setTimeout(stop, 600)
+}
+
 function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`
 }
 
-export default function MealCard({ date, slot, today, meal, onSave, onDelete, onCopy, onClosed }: Props) {
+export default function MealCard({ date, slot, today, meal, recipes, onSave, onDelete, onCopy, onClosed }: Props) {
   const router = useRouter()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const nameRef = useRef<HTMLInputElement>(null)
@@ -120,8 +143,6 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
   const closingOnPurpose = useRef(false)
   /** The recipe option a finger or mouse went down on, until it comes up. */
   const pressedOption = useRef<string | null>(null)
-  /** Set when pointer up picked a recipe, so the click that follows doesn't pick it again. */
-  const pickedOnPointerUp = useRef(false)
   const titleId = useId()
   const listboxId = useId()
 
@@ -147,11 +168,11 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
   const [narrow] = useState(() => window.matchMedia('(max-width: 479px)').matches)
 
   const dirty = fingerprint(draft) !== baseline
-  const recipe = findRecipe(draft.recipeKey)
+  const recipe = findRecipe(draft.recipeKey, recipes)
   // Nothing to suggest when the name already is the recipe that was picked.
   const suggestions = useMemo(
-    () => suggestRecipes(draft.name).filter(r => !(r.key === draft.recipeKey && normalizeGroceryName(draft.name) === normalizeGroceryName(recipeMealName(r)))),
-    [draft.name, draft.recipeKey]
+    () => suggestRecipes(draft.name, recipes).filter(r => !(r.key === draft.recipeKey && normalizeGroceryName(draft.name) === normalizeGroceryName(recipeMealName(r)))),
+    [draft.name, draft.recipeKey, recipes]
   )
   const showSuggestions = suggestOpen && suggestions.length > 0
   const tickedCount = draft.ingredients.filter(i => i.addToGroceries).length
@@ -307,12 +328,11 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
 
   function handleNameChange(value: string) {
     pressedOption.current = null
-    pickedOnPointerUp.current = false
     setNameMessage(false)
     setSuggestOpen(true)
     setActiveIndex(-1)
     setDraft(d => {
-      const current = findRecipe(d.recipeKey)
+      const current = findRecipe(d.recipeKey, recipes)
       const stillRecipe = current && normalizeGroceryName(value) === normalizeGroceryName(recipeMealName(current))
       return { ...d, name: value, recipeKey: stillRecipe ? d.recipeKey : null }
     })
@@ -382,7 +402,7 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
     const text = e.clipboardData.getData('text')
     if (!/\r?\n/.test(text)) return
     e.preventDefault()
-    addIngredientLines(text.split(/\r?\n/))
+    addIngredientLines(splitIngredientLines(text))
   }
 
   function updateIngredient(key: string, patch: Partial<DraftIngredient>) {
@@ -563,13 +583,12 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
                 onPointerDown={e => {
                   e.preventDefault()
                   pressedOption.current = r.key
-                  pickedOnPointerUp.current = false
                 }}
                 onPointerUp={() => {
                   const picked = pressedOption.current === r.key
                   pressedOption.current = null
                   if (!picked) return
-                  pickedOnPointerUp.current = true
+                  swallowNextClick()
                   pickRecipe(r)
                 }}
                 onPointerCancel={() => {
@@ -578,15 +597,12 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
                   if (document.activeElement !== nameRef.current) setSuggestOpen(false)
                 }}
                 // Screen readers and anything else that clicks without a pointer.
-                onClick={() => {
-                  if (pickedOnPointerUp.current) pickedOnPointerUp.current = false
-                  else pickRecipe(r)
-                }}
+                onClick={() => pickRecipe(r)}
                 className={`${styles.option} ${i === activeIndex ? styles.optionActive : ''}`}
               >
                 <span className={styles.optionEmoji} aria-hidden="true">{r.emoji}</span>
                 <span className={styles.optionText}>{recipeMealName(r)}</span>
-                <span className={styles.optionHint}>Recipe</span>
+                <span className={styles.optionHint}>{isUserRecipeKey(r.key) ? 'Your recipe' : 'Recipe'}</span>
               </li>
             ))}
           </ul>

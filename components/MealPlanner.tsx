@@ -21,6 +21,8 @@ import {
   type MealSlot,
   type PlannerView,
 } from '@/lib/mealPlan'
+import { recipes as guideRecipes } from '@/lib/content'
+import { userRecipeAsRecipe, type UserRecipe } from '@/lib/userRecipes'
 import MealCard, { type CopyResult, type SaveResult } from './MealCard'
 import Reveal from './Reveal'
 import styles from './MealPlanner.module.css'
@@ -31,6 +33,8 @@ interface Props {
   /** Today in London, worked out on the server so both sides agree. */
   today: string
   meals: Meal[]
+  /** Alexis's own recipes, suggested in the meal card before the guide's. */
+  myRecipes: UserRecipe[]
   loadError?: boolean
 }
 
@@ -82,7 +86,8 @@ function slotLabel(date: string, slot: MealSlot, meal: Meal | undefined) {
   return `${formatDayLong(date)}, ${slot}: ${meal ? meal.name : 'nothing planned'}`
 }
 
-export default function MealPlanner({ view, date, today, meals, loadError }: Props) {
+export default function MealPlanner({ view, date, today, meals, myRecipes, loadError }: Props) {
+  const recipes = useMemo(() => [...myRecipes.map(userRecipeAsRecipe), ...guideRecipes], [myRecipes])
   const router = useRouter()
   const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
@@ -235,6 +240,7 @@ export default function MealPlanner({ view, date, today, meals, loadError }: Pro
           slot={open.slot}
           today={today}
           meal={mealFor(open.date, open.slot)}
+          recipes={recipes}
           onSave={handleSave}
           onDelete={handleDelete}
           onCopy={handleCopy}

@@ -11,6 +11,7 @@ A personal guide to living alone, written by Sera for Alexis (the repo is still 
 - **Habits** (`/guide/habits`): charts for the cleaning tasks plus any custom habits (tick-off, number or percentage), one habit at a time or all on one chart, each with its own colour.
 - **Grocery list** (`/guide/grocery-list`): type an item and it's sorted into an aisle automatically by an offline keyword lookup (`lib/groceryCategories.ts`, no AI or network). Tick items off into a "Bought" history. Manual category moves are remembered.
 - **Meal planner** (`/guide/meal-planner`): breakfast, lunch and dinner for each day, in Day, Week or Month view (the view and date are kept in the URL, so refreshing keeps your place). Tapping a slot opens a meal card: a dish name with suggestions from the guide's recipes (picking one fills in its ingredients), ingredients, notes, copy to another day, and delete. Ticked ingredients go onto the grocery list automatically and merge with anything already there ("eggs 2 + 3"). Taking an ingredient off a meal asks whether to remove it from the list too, and bought items are never changed. Each grocery item says which meals it's for ("For Tomorrow breakfast"). The grocery sync rules live in `lib/mealGrocerySync.ts` and are checked by `npm run check:meal-sync`.
+- **Your own recipes** (`/guide/recipes`): "+ Add your own recipe" opens a form (`/guide/recipes/new`) for a name, icon, short description, ingredients and steps. A pasted ingredient list becomes one item per line, with bullets and numbering stripped and the quantity split off ("2 tbsp olive oil" → olive oil, 2 tbsp). Every item can still be edited or removed. Your recipes are listed above the guide's, with Edit and Delete, and the meal planner suggests them first.
 - Light/dark theme (follows the device, with a toggle), mobile-first layout, reduced-motion support.
 
 ## How sign-in works
@@ -31,6 +32,7 @@ A personal guide to living alone, written by Sera for Alexis (the repo is still 
    - `habits`, `habit_entries`: habit tracking (the 11 cleaning tasks are added automatically for each user the first time they open the cleaning page)
    - `grocery_items`, `grocery_category_overrides`: the grocery list and remembered category moves
    - `meal_plans`, `meal_ingredients`: the meal planner (one meal per day and slot, plus its ingredients, each of which can be linked to a grocery list item). `grocery_items` also has `origin` (typed or added by the planner) and `base_quantity` (the part he typed himself)
+   - `user_recipes`: recipes added in the app (ingredients and steps stored as JSON lists). A meal planned from one stores `recipe_key = 'mine-<id>'`
    - `checklist_completions`: old, no longer used, kept so no data is lost
    - the row-level security policies and table grants for all of them
 3. **Authentication → Providers**: Email enabled.

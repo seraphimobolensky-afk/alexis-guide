@@ -9,6 +9,7 @@ import { toMeal, type Meal } from '@/app/guide/meal-planner/data'
 import type { GroceryChoice, MealInput } from '@/lib/mealGroceryRules'
 import { copyMealWithGroceries, deleteMealWithGroceries, saveMealWithGroceries } from '@/lib/mealGrocerySync'
 import { supabasePlannerStore } from '@/lib/mealGroceryStore'
+import { DEFAULT_RECIPE_EMOJI, RECIPE_LIMITS, type UserRecipeInput } from '@/lib/userRecipes'
 
 async function requireUser() {
   const supabase = await createClient()
@@ -338,4 +339,57 @@ async function loadMeal(
     .single()
   if (error) return { error: error.message }
   return { meal: toMeal(data) }
+}
+
+// ─── Your own recipes ───────────────────────────────────────────────────────
+
+export type { UserRecipeInput } from '@/lib/userRecipes'
+
+/** Trimmed and capped, blanks dropped: what actually gets stored. */
+function cleanRecipe(input: UserRecipeInput) {
+  const cap = (text: string, max: number) => text.trim().slice(0, max)
+  return {
+    title: cap(input.title, RECIPE_LIMITS.title),
+    emoji: cap(input.emoji, RECIPE_LIMITS.emoji) || DEFAULT_RECIPE_EMOJI,
+    intro: cap(input.intro ?? '', RECIPE_LIMITS.intro) || null,
+    ingredients: input.ingredients
+      .map(i => ({ name: cap(i.name, RECIPE_LIMITS.ingredient), quantity: cap(i.quantity ?? '', RECIPE_LIMITS.ingredient) || null }))
+      .filter(i => i.name)
+      .slice(0, RECIPE_LIMITS.ingredients),
+    steps: input.steps.map(step => cap(step, RECIPE_LIMITS.step)).filter(Boolean).slice(0, RECIPE_LIMITS.steps),
+  }
+}
+
+/** The recipes page lists them and the meal planner suggests them. */
+function revalidateRecipes() {
+  revalidatePath('/guide/recipes')
+  revalidatePath('/guide/meal-planner')
+}
+
+/** Add a recipe, or update it when `input.id` is set. Returns its id. */
+export async function saveUserRecipe(input: UserRecipeInput): Promise<{ id?: string; error?: string }> {
+  const { supabase, user } = await requireUser()
+  const recipe = cleanRecipe(input)
+  if (!recipe.title) return { error: 'The recipe needs a name' }
+
+  const { data, error } = input.id
+    ? await supabase
+        .from('user_recipes')
+        .update({ ...recipe, updated_at: new Date().toISOString() })
+        .eq('id', input.id)
+        .eq('user_id', user.id)
+        .select('id')
+        .single()
+    : await supabase.from('user_recipes').insert({ ...recipe, user_id: user.id }).select('id').single()
+
+  revalidateRecipes()
+  if (error) return { error: error.message }
+  return { id: data.id }
+}
+
+export async function deleteUserRecipe(id: string): Promise<{ error?: string }> {
+  const { supabase, user } = await requireUser()
+  const { error } = await supabase.from('user_recipes').delete().eq('id', id).eq('user_id', user.id)
+  revalidateRecipes()
+  return { error: error?.message }
 }

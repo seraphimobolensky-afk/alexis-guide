@@ -6,8 +6,9 @@ export function recipeMealName(recipe: Recipe): string {
   return recipe.title.replace(/\s*\([^()]*\)\s*$/, '').trim()
 }
 
-export function findRecipe(key: string | null | undefined): Recipe | undefined {
-  return key ? recipes.find(r => r.key === key) : undefined
+/** `list` defaults to the guide's recipes; the meal card passes Alexis's own ones too. */
+export function findRecipe(key: string | null | undefined, list: Recipe[] = recipes): Recipe | undefined {
+  return key ? list.find(r => r.key === key) : undefined
 }
 
 /**
@@ -16,11 +17,11 @@ export function findRecipe(key: string | null | undefined): Recipe | undefined {
  * Both sides are normalised like grocery names (case, accents, punctuation).
  * Nothing until 2 characters have been typed.
  */
-export function suggestRecipes(query: string, limit = 5): Recipe[] {
+export function suggestRecipes(query: string, list: Recipe[] = recipes, limit = 5): Recipe[] {
   const typed = normalizeGroceryName(query)
   if (typed.length < 2) return []
   const typedWords = typed.split(' ')
-  return recipes
+  return list
     .filter(r => {
       const titleWords = normalizeGroceryName(r.title).split(' ')
       return typedWords.every(t => titleWords.some(w => w.startsWith(t)))

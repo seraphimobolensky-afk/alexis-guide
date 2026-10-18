@@ -174,9 +174,11 @@ export function categorizeGrocery(name: string, overrides?: Record<string, strin
   return KEYWORD_INDEX.find(({ keyword }) => phraseMatches(words, keyword))?.category ?? 'Other'
 }
 
-const UNIT = '(?:kg|g|gr|mg|l|ml|cl|lb|lbs|oz|x|pcs?|packs?|packets?|bottles?|cans?|tins?|jars?|bags?|boxes|box|dozen)'
-/** A number, or a range of two ("3-5"). */
-const NUMBER = '\\d+(?:[.,]\\d+)?(?:\\s*[-–]\\s*\\d+(?:[.,]\\d+)?)?'
+const UNIT =
+  '(?:kg|g|grams?|gr|mg|l|litres?|liters?|ml|cl|lb|lbs|oz|x|pcs?|packs?|packets?|bottles?|cans?|tins?|jars?|bags?|boxes|box|dozen' +
+  '|tbsp|tsp|tablespoons?|teaspoons?|cups?|cloves?|slices?|handfuls?|pinch(?:es)?|bunch(?:es)?|sprigs?)'
+/** A number ("2", "1.5", "½", "1/2", "1½"), or a range of two ("3-5"). */
+const NUMBER = '(?:\\d+(?:[.,]\\d+)?(?:\\s*[-–]\\s*\\d+(?:[.,]\\d+)?)?[½¼¾⅓⅔]?|\\d+\\/\\d+|[½¼¾⅓⅔])'
 
 /**
  * Loose "quantity + name" parsing. Handles a number or range (with optional

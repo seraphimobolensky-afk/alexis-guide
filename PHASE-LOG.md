@@ -715,3 +715,38 @@ Rebuilt and re-linted clean after both changes.
 - Checked in headless Chrome on a temporary route (deleted again): a touch tap at 390px, a mouse click at 1280px, a screen-reader-style `click()` and ArrowDown + Enter each picked the recipe once and filled its ingredients, with no "replace ingredients?" prompt. Not checked on a real phone; headless Chrome has no on-screen keyboard to reproduce the shift.
 
 **Files touched:** `components/MealCard.tsx`, `PHASE-LOG.md`
+
+---
+
+## Phase 16 — Add your own recipes
+**Date:** 2026-10-18
+
+**What changed:**
+- **Database:** new `user_recipes` table: title, emoji, intro, plus `ingredients` (`[{ name, quantity }]`) and `steps` (`[text]`) as jsonb. It has RLS ("Users manage their own recipes"), a `user_id` index and grants to `authenticated`. The SQL is safe to re-run. **Run the new block in the Supabase SQL editor before using it**; until then the recipes page shows a gentle "couldn't load your own recipes" note and the guide's recipes as before.
+- **Recipes page:**
+  - It's now a server page that loads your recipes; the list itself moved to `components/RecipeList.tsx`.
+  - "+ Add your own recipe" sits on the left, on the same row as "Expand all".
+  - Your recipes appear under "Your recipes", above "From the guide". Each has Edit and Delete in its card. Delete asks first, with focus moving to "Keep it", and meals planned from the recipe are left as they are.
+- **Add/edit form** (`/guide/recipes/new`, `/guide/recipes/[id]/edit`): name, icon, about, ingredients and steps.
+  - *Ingredients, pasting vs. adding one by one:* both work. Pasting a list turns each line into its own item. Bullets, checkboxes and numbering are stripped, "Ingredients" and "For the sauce:" headings are dropped, and the quantity is split off. Typing one and pressing Enter (or Add) adds a single item. Every item stays editable (name and quantity wrap instead of being cut off) and removable.
+  - The add field is a one-row text box rather than an input, because a phone keyboard's clipboard button inserts text without a paste event and an input would flatten the line breaks.
+  - Steps go in one per line; pasted numbering is stripped.
+  - Saving opens the recipe on the recipes page. Server-side, everything is trimmed and capped (`RECIPE_LIMITS`), and every query filters by `user_id`.
+- **Meal planner:** the meal card suggests your recipes before the guide's, labelled "Your recipe". Picking one fills in its ingredients, and "View recipe →" opens it on the recipes page (`?open=mine-<id>`). Pasting into the meal card's ingredient field now strips list markers too.
+- **Ingredient parsing** (`parseGroceryInput`):
+  - It now understands kitchen units: tbsp, tsp, cups, cloves, slices, handfuls, pinch, bunch, sprigs, grams and litres.
+  - It also understands fractions ("1/2 cup", "½ onion").
+  - All 62 ingredient lines in the guide's recipes parse exactly as before (compared against the old version).
+- **Phase 15.1 follow-up:** the recipe-suggestion fix had a second half. Once the list closes on pointer up, the tap's own click landed on whatever slid under the finger, which was usually an ingredient, opening it for editing and popping up the keyboard. That click is now swallowed (`swallowNextClick`, which gives up after 600ms). Found while testing your recipes in the card.
+
+**Checked:**
+- In headless Chrome on temporary routes (deleted again), at 360, 390, 768 and 1280px in light and dark:
+  - the recipes page with your recipes open, the new form after a phone-style paste, and the edit form: no horizontal scroll;
+  - the paste "Ingredients / • 500g beef mince / - 2 tbsp olive oil / ▢ 1/2 cup milk / 1. 3 cloves garlic / For the sauce: / Salt and pepper, to taste", followed by typing "2 eggs" + Enter, gave the six expected items;
+  - in the card, a touch tap, a mouse click, a screen-reader `click()` and ArrowDown + Enter each picked once, and no ingredient opened afterwards;
+  - a normal click 800ms later still worked.
+- Contrast on `--bg`: Delete (`--danger`) 5.48 light and 6.65 dark; hints (`--text-muted`) 4.74 / 5.18; buttons (`--accent`) 5.12 / 5.81.
+- `npm run build`, `npm run lint` and `npm run check:meal-sync` (29 passed) are clean.
+- **Not checked:** saving, editing and deleting against the real database. The table didn't exist yet and I can't sign in, so the server actions are only type-checked.
+
+**Files touched:** `supabase-schema.sql`, `lib/userRecipes.ts` (new), `lib/mealRecipes.ts`, `lib/groceryCategories.ts`, `app/actions.ts`, `app/guide/recipes/page.tsx`, `app/guide/recipes/data.ts` (new), `app/guide/recipes/recipesPage.module.css` (new), `app/guide/recipes/new/page.tsx` (new), `app/guide/recipes/[id]/edit/page.tsx` (new), `components/RecipeList.tsx` + `.module.css` (moved from `recipes.module.css`), `components/RecipeForm.tsx` + `.module.css` (new), `components/MealPlanner.tsx`, `components/MealCard.tsx`, `app/guide/meal-planner/page.tsx`, `README.md`, `PHASE-LOG.md`
