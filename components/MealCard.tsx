@@ -2,7 +2,7 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Meal } from '@/app/guide/meal-planner/data'
-import type { MealInput } from '@/app/actions'
+import { ingredientsTakenOff, type GroceryChoice, type MealInput } from '@/lib/mealGroceryRules'
 import { normalizeGroceryName, parseGroceryInput } from '@/lib/groceryCategories'
 import {
   MEAL_SLOTS,
@@ -27,7 +27,7 @@ interface Props {
   meal: Meal | undefined
   /** Saves optimistically; the promise settles once the server has answered. */
   onSave: (input: MealInput) => Promise<SaveResult>
-  onDelete: (meal: { id: string; date: string; slot: MealSlot; name: string }) => void
+  onDelete: (meal: { id: string; date: string; slot: MealSlot; name: string }, groceryChoice: GroceryChoice) => void
   onCopy: (input: { fromId: string; toDate: string; toSlot: MealSlot; replace: boolean }) => Promise<CopyResult>
   /** Called once the dialog has closed, however it closed. */
   onClosed: () => void
@@ -40,7 +40,12 @@ interface DraftIngredient {
   name: string
   quantity: string
   addToGroceries: boolean
+  /** "Add again": put it back on the list after its grocery row was removed by hand. */
+  relink?: boolean
 }
+
+/** An ingredient as last saved, with its grocery link. */
+type SavedIngredient = Meal['ingredients'][number]
 
 interface Draft {
   name: string
@@ -51,8 +56,10 @@ interface Draft {
 
 type Confirm =
   | { type: 'recipe'; recipe: Recipe; count: number }
-  | { type: 'delete' }
-  | { type: 'emptyName' }
+  /** Deleting the meal (or closing it with everything cleared); `names` are grocery rows it still feeds. */
+  | { type: 'delete' | 'emptyName'; names: string[] }
+  /** An edit takes ingredients off that are still on the grocery list: keep or remove them? */
+  | { type: 'grocery'; names: string[]; resolve: (choice: GroceryChoice | null) => void }
   | null
 
 type CopyState =
@@ -94,7 +101,7 @@ function cleanDraft(draft: Draft): Draft {
 /** Compares content only (not ids or keys), to tell whether anything changed. */
 function fingerprint(draft: Draft): string {
   const d = cleanDraft(draft)
-  return JSON.stringify([d.name, d.notes, d.recipeKey, d.ingredients.map(i => [i.name, i.quantity, i.addToGroceries])])
+  return JSON.stringify([d.name, d.notes, d.recipeKey, d.ingredients.map(i => [i.name, i.quantity, i.addToGroceries, !!i.relink])])
 }
 
 function plural(n: number, word: string) {
@@ -119,6 +126,8 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
   const [baseline, setBaseline] = useState(() => fingerprint(draftFromMeal(meal)))
   const [savedId, setSavedId] = useState(meal?.id && !meal.id.startsWith('temp-') ? meal.id : null)
   const [savedName, setSavedName] = useState(meal?.name ?? '')
+  /** The ingredients as last saved, with their grocery links: what an edit could take off the list. */
+  const [saved, setSaved] = useState<SavedIngredient[]>(meal?.ingredients ?? [])
   const [ingredientInput, setIngredientInput] = useState('')
   const [nameMessage, setNameMessage] = useState(false)
   const [confirm, setConfirm] = useState<Confirm>(null)
@@ -135,7 +144,11 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
 
   const dirty = fingerprint(draft) !== baseline
   const recipe = findRecipe(draft.recipeKey)
-  const suggestions = useMemo(() => suggestRecipes(draft.name), [draft.name])
+  // Nothing to suggest when the name already is the recipe that was picked.
+  const suggestions = useMemo(
+    () => suggestRecipes(draft.name).filter(r => !(r.key === draft.recipeKey && normalizeGroceryName(draft.name) === normalizeGroceryName(recipeMealName(r)))),
+    [draft.name, draft.recipeKey]
+  )
   const showSuggestions = suggestOpen && suggestions.length > 0
   const tickedCount = draft.ingredients.filter(i => i.addToGroceries).length
   const allTicked = draft.ingredients.length > 0 && tickedCount === draft.ingredients.length
@@ -200,8 +213,27 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
         quantity: i.quantity || null,
         addToGroceries: i.addToGroceries,
         sortOrder: index,
+        relink: i.relink,
       })),
     }
+  }
+
+  /** Grocery rows (still to buy) that would lose this meal's share. Bought rows don't count: they're history. */
+  function stillOnList(ingredients: SavedIngredient[]): string[] {
+    const names = ingredients.filter(i => i.groceryItemId && i.grocery && !i.grocery.purchased).map(i => i.grocery!.name)
+    return [...new Set(names)]
+  }
+
+  /** Ask "Keep on list / Remove" inside the card; resolves null if the question is dismissed. */
+  function askGroceryChoice(names: string[]): Promise<GroceryChoice | null> {
+    return new Promise(resolve => setConfirm({ type: 'grocery', names, resolve }))
+  }
+
+  /** The choice for saving this draft: undefined if nothing linked comes off, null if he backed out. */
+  async function groceryChoiceFor(clean: Draft): Promise<GroceryChoice | null | undefined> {
+    const names = stillOnList(ingredientsTakenOff(saved, clean.ingredients).map(t => saved.find(s => s.id === t.id)!))
+    if (names.length === 0) return undefined
+    return askGroceryChoice(names)
   }
 
   function close() {
@@ -210,11 +242,12 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
   }
 
   /** Every way of closing except "Discard changes" goes through here. */
-  function finish() {
+  async function finish() {
+    if (confirm?.type === 'grocery') return
     const clean = cleanDraft(draft)
     if (!clean.name && clean.ingredients.length === 0) {
       if (savedId) {
-        setConfirm({ type: 'emptyName' })
+        setConfirm({ type: 'emptyName', names: stillOnList(saved) })
         return
       }
       close()
@@ -225,7 +258,11 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
       nameRef.current?.focus()
       return
     }
-    if (dirty) void onSave(toInput(clean))
+    if (dirty) {
+      const groceryChoice = await groceryChoiceFor(clean)
+      if (groceryChoice === null) return
+      void onSave({ ...toInput(clean), groceryChoice })
+    }
     close()
   }
 
@@ -238,7 +275,9 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
       return null
     }
     if (!dirty && savedId) return savedId
-    const res = await onSave(toInput(clean))
+    const groceryChoice = await groceryChoiceFor(clean)
+    if (groceryChoice === null) return null
+    const res = await onSave({ ...toInput(clean), groceryChoice })
     if (res.error || !res.meal) {
       setCopyState({ status: 'error', message: `Couldn’t save this meal first, so nothing was copied. (${res.error ?? 'no answer'})` })
       return null
@@ -250,10 +289,11 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
       ...d,
       ingredients: d.ingredients.map(i => {
         const index = keys.indexOf(i.key)
-        return index >= 0 && ids[index] ? { ...i, id: ids[index] } : i
+        return index >= 0 && ids[index] ? { ...i, id: ids[index], relink: false } : i
       }),
     }))
-    setBaseline(fingerprint(clean))
+    setBaseline(fingerprint({ ...clean, ingredients: clean.ingredients.map(i => ({ ...i, relink: false })) }))
+    setSaved(res.meal.ingredients)
     setSavedId(res.meal.id)
     setSavedName(res.meal.name)
     return res.meal.id
@@ -389,9 +429,20 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
     }
   }
 
-  function handleDelete() {
-    if (savedId) onDelete({ id: savedId, date, slot, name: savedName })
+  function handleDelete(groceryChoice: GroceryChoice) {
+    if (savedId) onDelete({ id: savedId, date, slot, name: savedName }, groceryChoice)
     close()
+  }
+
+  function answerGrocery(choice: GroceryChoice) {
+    if (confirm?.type === 'grocery') confirm.resolve(choice)
+    setConfirm(null)
+  }
+
+  /** Esc / back while a question is showing: same as its cancel answer. */
+  function dismissConfirm() {
+    if (confirm?.type === 'grocery') confirm.resolve(null)
+    setConfirm(null)
   }
 
   async function handleViewRecipe(e: React.MouseEvent<HTMLAnchorElement>) {
@@ -412,22 +463,22 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
   function handleKeyDown(e: React.KeyboardEvent<HTMLDialogElement>) {
     if (e.key !== 'Escape' || e.defaultPrevented) return
     e.preventDefault()
-    if (confirm) setConfirm(null)
-    else finish()
+    if (confirm) dismissConfirm()
+    else void finish()
   }
 
   function handleCancel(e: React.SyntheticEvent<HTMLDialogElement>) {
     // Other close requests (e.g. Android's back button): same as Escape.
     e.preventDefault()
-    if (confirm) setConfirm(null)
-    else finish()
+    if (confirm) dismissConfirm()
+    else void finish()
   }
 
   /** If the browser closed it anyway, still keep a valid change rather than drop it. */
   function handleClose() {
     if (!closingOnPurpose.current) {
       const clean = cleanDraft(draft)
-      if (clean.name && dirty) void onSave(toInput(clean))
+      if (clean.name && dirty) void onSave({ ...toInput(clean), groceryChoice: 'keep' })
     }
     onClosed()
   }
@@ -450,12 +501,12 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
       onClose={handleClose}
       onPointerDown={e => (pointerDownOutside.current = e.target === dialogRef.current && isOutside(e))}
       onClick={e => {
-        if (e.target === dialogRef.current && pointerDownOutside.current && isOutside(e)) finish()
+        if (e.target === dialogRef.current && pointerDownOutside.current && isOutside(e)) void finish()
       }}
     >
       <header className={styles.header}>
         <h2 id={titleId} className={styles.title}>{title}</h2>
-        <button type="button" onClick={finish} className={styles.closeButton} aria-label="Close">
+        <button type="button" onClick={() => void finish()} className={styles.closeButton} aria-label="Close">
           ✕
         </button>
       </header>
@@ -643,7 +694,11 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
                           </button>
                         )}
                       </div>
-                      {!i.addToGroceries && <span className={styles.notOnList}>not on list</span>}
+                      <IngredientStatus
+                        ingredient={i}
+                        saved={saved.find(s => s.id === i.id)}
+                        onAddAgain={() => updateIngredient(i.key, { relink: true })}
+                      />
                     </div>
                     <button
                       type="button"
@@ -693,7 +748,7 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
             Copy to another day…
           </button>
           {savedId && confirm?.type !== 'delete' && (
-            <button type="button" onClick={() => setConfirm({ type: 'delete' })} className={styles.dangerText}>
+            <button type="button" onClick={() => setConfirm({ type: 'delete', names: stillOnList(saved) })} className={styles.dangerText}>
               Delete meal
             </button>
           )}
@@ -764,40 +819,44 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
         )}
 
         {confirm?.type === 'delete' && (
-          <div className={styles.confirm}>
-            <p>Delete “{savedName}” from {formatDayLong(date)}?</p>
-            <div className={styles.confirmActions}>
-              <button type="button" onClick={() => setConfirm(null)} className={styles.textButton}>
-                Cancel
-              </button>
-              <button type="button" onClick={handleDelete} className={styles.confirmDanger}>
-                Yes, delete it
-              </button>
-            </div>
-          </div>
+          <DeleteConfirm
+            text={`Delete “${savedName}” from ${formatDayLong(date)}`}
+            names={confirm.names}
+            cancelLabel="Cancel"
+            onCancel={() => setConfirm(null)}
+            onDelete={handleDelete}
+          />
         )}
       </div>
 
       <footer className={styles.footer}>
-        {confirm?.type === 'emptyName' ? (
-          <div className={styles.confirm}>
-            <p>The name is empty. Delete “{savedName}” from {formatDayLong(date)}?</p>
+        {confirm?.type === 'grocery' ? (
+          <div className={styles.confirm} role="group" aria-label="Keep on grocery list?">
+            <p>
+              You took {plural(confirm.names.length, 'ingredient')} off this meal that{' '}
+              {confirm.names.length === 1 ? 'is' : 'are'} still on your grocery list: {confirm.names.join(', ')}.
+              Remove {confirm.names.length === 1 ? 'it' : 'them'} from the list too?
+            </p>
             <div className={styles.confirmActions}>
-              <button
-                type="button"
-                onClick={() => {
-                  setConfirm(null)
-                  nameRef.current?.focus()
-                }}
-                className={styles.textButton}
-              >
-                Keep editing
+              <button type="button" onClick={() => answerGrocery('keep')} className={styles.textButton}>
+                Keep on list
               </button>
-              <button type="button" onClick={handleDelete} className={styles.confirmDanger}>
-                Delete meal
+              <button type="button" onClick={() => answerGrocery('remove')} className={styles.confirmDanger}>
+                Remove
               </button>
             </div>
           </div>
+        ) : confirm?.type === 'emptyName' ? (
+          <DeleteConfirm
+            text={`The name is empty. Delete “${savedName}” from ${formatDayLong(date)}`}
+            names={confirm.names}
+            cancelLabel="Keep editing"
+            onCancel={() => {
+              setConfirm(null)
+              nameRef.current?.focus()
+            }}
+            onDelete={handleDelete}
+          />
         ) : (
           <div className={styles.footerRow}>
             {dirty ? (
@@ -807,12 +866,92 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
             ) : (
               <span />
             )}
-            <button type="button" onClick={finish} className={`${styles.doneButton} raised-sm`}>
+            <button type="button" onClick={() => void finish()} className={`${styles.doneButton} raised-sm`}>
               Done
             </button>
           </div>
         )}
       </footer>
     </dialog>
+  )
+}
+
+/**
+ * The small line under an ingredient: unticked → "not on list"; ticked but
+ * its grocery row was removed by hand → "not on list any more" + Add again;
+ * its row already bought → "bought".
+ */
+function IngredientStatus({
+  ingredient,
+  saved,
+  onAddAgain,
+}: {
+  ingredient: DraftIngredient
+  saved: SavedIngredient | undefined
+  onAddAgain: () => void
+}) {
+  if (!ingredient.addToGroceries) return <span className={styles.notOnList}>not on list</span>
+  if (!saved || !saved.addToGroceries) return null
+  if (!saved.groceryItemId) {
+    if (ingredient.relink) return <span className={styles.notOnList}>goes back on the list when you close this</span>
+    return (
+      <span className={styles.notOnList}>
+        not on list any more ·{' '}
+        <button type="button" onClick={onAddAgain} className={styles.addAgain} aria-label={`Add ${ingredient.name} to the grocery list again`}>
+          Add again
+        </button>
+      </span>
+    )
+  }
+  if (saved.grocery?.purchased) return <span className={styles.notOnList}>bought</span>
+  return null
+}
+
+/**
+ * Deleting a meal: one question that also covers its grocery rows, if it
+ * still feeds any ("Delete meal only" keeps them on the list as they are).
+ */
+function DeleteConfirm({
+  text,
+  names,
+  cancelLabel,
+  onCancel,
+  onDelete,
+}: {
+  text: string
+  names: string[]
+  cancelLabel: string
+  onCancel: () => void
+  onDelete: (choice: GroceryChoice) => void
+}) {
+  return (
+    <div className={styles.confirm} role="group" aria-label="Delete meal?">
+      {names.length > 0 ? (
+        <p>
+          {text} and remove its {plural(names.length, 'ingredient')} from your grocery list ({names.join(', ')})?
+        </p>
+      ) : (
+        <p>{text}?</p>
+      )}
+      <div className={styles.confirmActions}>
+        <button type="button" onClick={onCancel} className={styles.textButton}>
+          {cancelLabel}
+        </button>
+        {names.length > 0 ? (
+          <>
+            <button type="button" onClick={() => onDelete('keep')} className={`${styles.smallButton} raised-sm`}>
+              Delete meal only
+            </button>
+            <button type="button" onClick={() => onDelete('remove')} className={styles.confirmDanger}>
+              Delete and remove from list
+            </button>
+          </>
+        ) : (
+          <button type="button" onClick={() => onDelete('remove')} className={styles.confirmDanger}>
+            Yes, delete it
+          </button>
+        )}
+      </div>
+    </div>
   )
 }

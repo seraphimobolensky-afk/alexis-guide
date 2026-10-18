@@ -16,12 +16,15 @@ import {
   type GroceryCategory,
 } from '@/lib/groceryCategories'
 import type { GroceryItem } from '@/app/guide/grocery-list/data'
+import { formatMealRefs } from '@/lib/mealPlan'
 import Reveal from './Reveal'
 import styles from './GroceryList.module.css'
 
 interface Props {
   items: GroceryItem[]
   overrides: Record<string, string>
+  /** Today in London, for the "For Today dinner" line under planner items. */
+  today: string
 }
 
 type OptimisticAction =
@@ -55,7 +58,7 @@ function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-export default function GroceryList({ items, overrides }: Props) {
+export default function GroceryList({ items, overrides, today }: Props) {
   const [optimisticItems, applyOptimistic] = useOptimistic(items, applyAction)
   const [, startTransition] = useTransition()
   const [input, setInput] = useState('')
@@ -110,7 +113,7 @@ export default function GroceryList({ items, overrides }: Props) {
     save(
       {
         type: 'add',
-        item: { id: `temp-${now}-${Math.random()}`, name, category, quantity, purchased: false, purchasedAt: null, createdAt: now },
+        item: { id: `temp-${now}-${Math.random()}`, name, category, quantity, purchased: false, purchasedAt: null, createdAt: now, meals: [] },
       },
       () => addGroceryItem({ name, category, quantity: quantity ?? undefined }),
       `Couldn’t save “${name}”, so it was taken off the list again.`
@@ -223,7 +226,10 @@ export default function GroceryList({ items, overrides }: Props) {
                         <span className={`${styles.checkbox} ${leaving ? styles.checkboxOn : ''}`} aria-hidden>
                           {leaving ? '✓' : ''}
                         </span>
-                        <span className={styles.itemName}>{item.name}</span>
+                        <span className={styles.itemText}>
+                          <span className={styles.itemName}>{item.name}</span>
+                          {item.meals.length > 0 && <span className={styles.forMeals}>{formatMealRefs(item.meals, today)}</span>}
+                        </span>
                         {item.quantity && <span className={styles.quantity}>{item.quantity}</span>}
                       </button>
                       <button
@@ -298,7 +304,10 @@ export default function GroceryList({ items, overrides }: Props) {
                     <span className={`${styles.checkbox} ${styles.checkboxOn}`} aria-hidden>
                       ✓
                     </span>
-                    <span className={`${styles.itemName} ${styles.struck}`}>{item.name}</span>
+                    <span className={styles.itemText}>
+                      <span className={`${styles.itemName} ${styles.struck}`}>{item.name}</span>
+                      {item.meals.length > 0 && <span className={styles.forMeals}>{formatMealRefs(item.meals, today)}</span>}
+                    </span>
                     {item.quantity && <span className={`${styles.quantity} ${styles.struck}`}>{item.quantity}</span>}
                   </button>
                 </Reveal>

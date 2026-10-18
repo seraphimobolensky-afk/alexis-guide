@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import SectionHeader from '@/components/SectionHeader'
 import GroceryList from '@/components/GroceryList'
+import { todayInLondon } from '@/lib/mealPlan'
 import { getGroceryPageData } from './data'
 import styles from './groceryList.module.css'
 
@@ -22,7 +23,7 @@ export default async function GroceryListPage() {
           Couldn’t load your grocery list right now. Try reloading the page in a moment.
         </p>
       ) : (
-        <GroceryList items={items} overrides={overrides} />
+        <GroceryList items={items} overrides={overrides} today={todayInLondon()} />
       )}
     </div>
   )

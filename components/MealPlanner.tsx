@@ -2,7 +2,8 @@
 import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import type { Meal } from '@/app/guide/meal-planner/data'
-import { copyMeal, deleteMeal, saveMeal, type MealInput } from '@/app/actions'
+import { copyMeal, deleteMeal, saveMeal } from '@/app/actions'
+import type { GroceryChoice, MealInput } from '@/lib/mealGroceryRules'
 import {
   MEAL_SLOTS,
   MEAL_SLOT_LABELS,
@@ -62,6 +63,7 @@ function optimisticMeal(input: MealInput): Meal {
       quantity: i.quantity,
       addToGroceries: i.addToGroceries,
       groceryItemId: null,
+      grocery: null,
       sortOrder: index,
     })),
   }
@@ -142,12 +144,12 @@ export default function MealPlanner({ view, date, today, meals, loadError }: Pro
     })
   }
 
-  function handleDelete(meal: { id: string; date: string; slot: MealSlot; name: string }) {
+  function handleDelete(meal: { id: string; date: string; slot: MealSlot; name: string }, groceryChoice: GroceryChoice) {
     setError('')
     startSave(async () => {
       applyOptimistic({ type: 'remove', date: meal.date, slot: meal.slot })
       try {
-        const res = await deleteMeal(meal.id)
+        const res = await deleteMeal(meal.id, groceryChoice)
         if (res.error) setError(`Couldn’t delete “${meal.name}”, so it was put back. (${res.error})`)
       } catch {
         setError(`Couldn’t delete “${meal.name}”. The connection dropped — try again.`)

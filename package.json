@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:meal-sync": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=ExperimentalWarning --import ./scripts/ts-resolve.mjs scripts/check-meal-grocery-sync.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

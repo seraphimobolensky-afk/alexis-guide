@@ -568,3 +568,46 @@ Rebuilt and re-linted clean after both changes.
 - Checked in headless Chrome at 1388×820, 1280×600, 768×1024 and 390×844, with a full recipe and an empty card. **Not checked in Safari itself** (no WebKit available to automate here).
 
 **Files touched:** `components/MealCard.module.css`, `PHASE-LOG.md`
+
+---
+
+## Phase 14 — Meal planner feeds the grocery list
+**Date:** 2026-10-18
+
+**What changed:**
+- **`lib/mealGrocerySync.ts`** (server-side): the three helpers. Each is idempotent: running it twice changes nothing more.
+  - `linkIngredient(s)` links ticked, unlinked ingredients to this user's unbought row with the same `normalizeGroceryName`, typed or planner-made. If there's none, it adds a planner row (`base_quantity` null, category from `categorizeGrocery` with the user's overrides). Bought rows are never joined.
+  - `recomputeGroceryItem` sets the quantity to `base_quantity` plus the linked quantities, in date/slot order, joined with " + " and skipping blanks. It deletes a planner row that is unbought and has no links left, and never touches bought rows.
+  - `unlinkIngredients` clears the links and recomputes.
+  - `keepOnList` handles "Keep on list". The save, delete and copy logic is built on these helpers and works through a `PlannerStore` interface.
+- **`lib/mealGroceryStore.ts`**: the Supabase store. Every query filters by `user_id`.
+- **`lib/mealGroceryRules.ts`**: the pure rules shared by the card and the server (`ingredientsTakenOff`, `joinQuantities`, the `MealInput` / `GroceryChoice` types), so the card asks exactly when the server would take something off.
+- **Server actions:** `saveMeal`, `deleteMeal(id, groceryChoice)` and `copyMeal` are now thin wrappers around the sync module (the Phase 13 markers are gone).
+  - New, newly ticked and renamed ingredients are linked, and a changed quantity recomputes its row. New and copied meals never ask.
+  - A replaced copy target's shares come off the list.
+  - A ticked ingredient whose grocery row was removed by hand stays off the list on later saves unless "Add again" sends `relink`.
+  - If a save takes linked ingredients off and no choice was sent (e.g. the browser forced the card shut), it defaults to "keep", so nothing disappears unasked.
+  - Every meal and grocery action now revalidates both `/guide/meal-planner` and `/guide/grocery-list`.
+- **Typed items:** `addGroceryItem` sets `origin = 'manual'` and `base_quantity` = the typed quantity, and still always creates its own row. The other grocery actions don't change quantities.
+- **Meal card:**
+  - Before closing (Done, ✕, Escape, backdrop, and before Copy or View recipe), the card checks which still-to-buy grocery rows would lose this meal's share: ingredients removed, unticked or renamed. If there are any, it asks inline: "You took 2 ingredients off this meal that are still on your grocery list: Bacon, Cream. Remove them from the list too?" with **Keep on list** / **Remove**. Escape backs out of the question and leaves the card open. Rows already bought are unlinked silently.
+  - Delete meal, and closing a card with everything cleared, ask one combined question: Cancel (or Keep editing) / **Delete meal only** / **Delete and remove from list**.
+  - Ingredient hints: "not on list" (unticked), "bought", and "not on list any more · **Add again**" (ticked, but its row was removed by hand).
+  - A meal re-opened under its recipe's name no longer suggests that same recipe.
+- **"Keep on list":** when no other meal feeds the row, it keeps its whole current quantity as its base and becomes a typed (`manual`) item. **Deliberate deviation:** when another meal still feeds the row, only this meal's share is folded into the base, so the other meal keeps adding and removing its own share. Making the whole row standalone would have cut the other meal off too. The total is the same, but the parts can swap order ("2 + 3" → "3 + 2").
+- **Grocery list:** items load the meals they're for (via `meal_ingredients` → `meal_plans`) and show "For Today breakfast · Tomorrow breakfast · Wed dinner" in small muted text under the name. Days more than a week off, or past, show the date. Row layout and ticking are unchanged.
+
+**Checks:**
+- `npm run build` and `npm run lint`: 0 errors, 0 warnings.
+- **`npm run check:meal-sync`** (`scripts/check-meal-grocery-sync.ts`, plain `node`, no test framework): the real sync code against an in-memory store with the same cascade/set-null behaviour. **29 passed, 0 failed.** It covers:
+  - a new meal adds its items; two meals' eggs merge into "2 + 3"; deleting one leaves "3"; deleting both removes the row;
+  - a bought "Eggs" row is never merged into or removed;
+  - unticking or removing asks, and a quantity-only edit doesn't;
+  - "Keep on list" leaves the row exactly as it was; "Remove" deletes a planner-only row;
+  - typed "milk 1l" + planner "milk 500ml" gives "1l + 500ml", and removing the meal leaves "1l";
+  - quantity changes recompute; a hand-removed row isn't quietly re-added but "Add again" works;
+  - copies, past-date copies and replacing work; a second run of the helpers changes nothing.
+- Headless Chrome on temporary sample pages (deleted before committing): the hints, the keep/remove question (bought Parmesan correctly left out), Escape on the question, Add again, both delete questions, and the "For …" line at 360, 390 and 1280px in light and dark. No horizontal scroll, and the screenshots were reviewed.
+- **Not checked:** the Supabase store against the real database, because there's no signed-in session here. Worth one real run-through: plan a meal, look at the grocery list, untick something, delete the meal.
+
+**Files touched:** `lib/mealGrocerySync.ts`, `lib/mealGroceryStore.ts`, `lib/mealGroceryRules.ts`, `scripts/check-meal-grocery-sync.ts`, `scripts/ts-resolve.mjs` (all new), `app/actions.ts`, `app/guide/meal-planner/data.ts`, `app/guide/grocery-list/{data.ts,page.tsx}`, `components/MealCard.tsx` + `.module.css`, `components/MealPlanner.tsx`, `components/GroceryList.tsx` + `.module.css`, `lib/mealPlan.ts`, `package.json` (a `check:meal-sync` script only, no new packages), `PHASE-LOG.md`

@@ -194,3 +194,22 @@ export function formatRangeTitle(view: PlannerView, dateStr: string, today: stri
   }
   return `${formatWeekdayShort(start)} ${formatDayNumber(start)} – ${endText}`
 }
+
+/**
+ * Which planned meals a grocery item is for: "For Mon dinner · Tue breakfast",
+ * with "Today" / "Tomorrow" where they apply. Days within the coming week use
+ * the short weekday; anything further off (or past) adds the date.
+ */
+export function formatMealRefs(meals: { date: string; slot: MealSlot }[], today: string): string {
+  const tomorrow = addDays(today, 1)
+  const weekAhead = addDays(today, 6)
+  const day = (d: string) =>
+    d === today
+      ? 'Today'
+      : d === tomorrow
+        ? 'Tomorrow'
+        : d > today && d <= weekAhead
+          ? formatWeekdayShort(d)
+          : `${formatWeekdayShort(d)} ${formatDayMonthShort(d)}`
+  return `For ${meals.map(m => `${day(m.date)} ${m.slot}`).join(' · ')}`
+}
