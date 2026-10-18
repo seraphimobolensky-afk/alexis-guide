@@ -750,3 +750,35 @@ Rebuilt and re-linted clean after both changes.
 - **Not checked:** saving, editing and deleting against the real database. The table didn't exist yet and I can't sign in, so the server actions are only type-checked.
 
 **Files touched:** `supabase-schema.sql`, `lib/userRecipes.ts` (new), `lib/mealRecipes.ts`, `lib/groceryCategories.ts`, `app/actions.ts`, `app/guide/recipes/page.tsx`, `app/guide/recipes/data.ts` (new), `app/guide/recipes/recipesPage.module.css` (new), `app/guide/recipes/new/page.tsx` (new), `app/guide/recipes/[id]/edit/page.tsx` (new), `components/RecipeList.tsx` + `.module.css` (moved from `recipes.module.css`), `components/RecipeForm.tsx` + `.module.css` (new), `components/MealPlanner.tsx`, `components/MealCard.tsx`, `app/guide/meal-planner/page.tsx`, `README.md`, `PHASE-LOG.md`
+
+---
+
+## Phase 17 — Coloured weekdays and a "7 days" view
+**Date:** 2026-10-18
+
+**What changed:**
+- **Weekday colours:** in the Week and 7 days views, each day's heading is filled with its own colour from the style palette. Every Monday has the same colour, every Tuesday the same, and so on, in both themes.
+  - The text is the palette's cream (#FFF7E3) on the dark colours and its charcoal (#333333) on the light ones.
+  - #333333 (almost black) and #FFF7E3 (almost the page colour) aren't used as headings. #99735A is left out because neither text colour reaches 4.5:1 on it (cream 3.97, white 4.24).
+  - Today used to be marked by an accent-coloured heading, which doesn't work on a filled one. Today's card now gets a 2px accent ring instead; the "Today" tag stays where there's room.
+
+| Day | Heading | Text | Contrast |
+|---|---|---|---|
+| Monday | #4E6081 | #FFF7E3 | 5.93 |
+| Tuesday | #97A887 | #333333 | 4.97 |
+| Wednesday | #BB9F88 | #333333 | 5.07 |
+| Thursday | #414A5A | #FFF7E3 | 8.36 |
+| Friday | #CBD0B5 | #333333 | 7.96 |
+| Saturday | #67472C | #FFF7E3 | 7.82 |
+| Sunday | #656E5D | #FFF7E3 | 4.99 |
+
+- **"7 days" view** (`?view=days`): seven days starting on the chosen date, which is today unless you've stepped elsewhere. It uses the same layout as Week. ‹ / › move by seven days, the title reads e.g. "Sun 18 – Sat 24 Oct 2026", and the arrows are labelled "Previous 7 days" / "Next 7 days". Week still runs Monday to Sunday and stays the default.
+- **Toolbar:** with four views plus Today, the pills are a little tighter below 480px (11px side padding, 6px gaps), so they still fit on one row at 360px. They used to push Today onto its own line.
+
+**Checked:**
+- In headless Chrome on a temporary route (deleted again), Week and 7 days at 360, 390, 768 and 1280px, light and dark:
+  - no horizontal scroll, the toolbar on one row, and the right days and titles;
+  - the coloured headings and today's ring look right in both the stacked (phone) and the seven-column (desktop) layouts.
+- `npm run build`, `npm run lint` and `npm run check:meal-sync` are clean.
+
+**Files touched:** `lib/mealPlan.ts`, `components/MealPlanner.tsx`, `components/MealPlanner.module.css`, `README.md`, `PHASE-LOG.md`

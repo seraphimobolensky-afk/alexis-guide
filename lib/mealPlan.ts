@@ -19,7 +19,8 @@ export const MEAL_SLOT_LABELS: Record<MealSlot, string> = {
   dinner: 'Dinner',
 }
 
-export const PLANNER_VIEWS = ['day', 'week', 'month'] as const
+/** `days`: seven days starting on the chosen date (today, by default) rather than on a Monday. */
+export const PLANNER_VIEWS = ['day', 'days', 'week', 'month'] as const
 export type PlannerView = (typeof PLANNER_VIEWS)[number]
 
 export const PLANNER_TIME_ZONE = 'Europe/London'
@@ -98,6 +99,21 @@ export function weekDates(dateStr: string): string[] {
   return Array.from({ length: 7 }, (_, i) => addDays(monday, i))
 }
 
+/** Seven dates starting on this one: "the coming week" from any day. */
+export function nextSevenDates(dateStr: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => addDays(dateStr, i))
+}
+
+/** 0 = Monday … 6 = Sunday. */
+export function weekdayIndex(dateStr: string): number {
+  return (parseDate(dateStr).getUTCDay() + 6) % 7
+}
+
+/** The dates a seven-day view (Week or 7 days) shows. */
+export function sevenDayDates(view: 'days' | 'week', dateStr: string): string[] {
+  return view === 'week' ? weekDates(dateStr) : nextSevenDates(dateStr)
+}
+
 /** 42 dates (six Monday-first weeks) covering the month containing this date. */
 export function monthGridDates(dateStr: string): string[] {
   const first = startOfWeek(startOfMonth(dateStr))
@@ -111,14 +127,14 @@ export function isSameMonth(a: string, b: string): boolean {
 /** The first and last date the given view shows (inclusive). */
 export function visibleRange(view: PlannerView, dateStr: string): { start: string; end: string } {
   if (view === 'day') return { start: dateStr, end: dateStr }
-  const dates = view === 'week' ? weekDates(dateStr) : monthGridDates(dateStr)
+  const dates = view === 'month' ? monthGridDates(dateStr) : sevenDayDates(view, dateStr)
   return { start: dates[0], end: dates[dates.length - 1] }
 }
 
-/** Where ‹ / › go from here: one day, week or month back or forward. */
+/** Where ‹ / › go from here: one day, seven days, a week or a month back or forward. */
 export function stepDate(view: PlannerView, dateStr: string, direction: -1 | 1): string {
   if (view === 'day') return addDays(dateStr, direction)
-  if (view === 'week') return addWeeks(dateStr, direction)
+  if (view === 'week' || view === 'days') return addWeeks(dateStr, direction)
   return addMonths(dateStr, direction)
 }
 
@@ -171,6 +187,7 @@ export function formatMonthYear(dateStr: string): string {
  * day   → "Wednesday 21 October" (with the year if it isn't this year)
  * week  → "Mon 19 – Sun 25 Oct 2026", "Mon 26 Oct – Sun 1 Nov 2026",
  *         "Mon 28 Dec 2026 – Sun 3 Jan 2027"
+ * days  → the same, from the chosen day: "Sun 18 – Sat 24 Oct 2026"
  * month → "October 2026"
  */
 export function formatRangeTitle(view: PlannerView, dateStr: string, today: string): string {
@@ -180,7 +197,7 @@ export function formatRangeTitle(view: PlannerView, dateStr: string, today: stri
   }
   if (view === 'month') return formatMonthYear(dateStr)
 
-  const dates = weekDates(dateStr)
+  const dates = sevenDayDates(view, dateStr)
   const start = dates[0]
   const end = dates[6]
   const startYear = start.slice(0, 4)

@@ -57,6 +57,13 @@
 
 .todayButton:hover { color: var(--accent); }
 
+/* Four views and Today only fit on one row of a phone with tighter pills. */
+@media (max-width: 479px) {
+  .segmented { gap: 6px; }
+  .segment,
+  .todayButton { padding: 8px 11px; }
+}
+
 .navRow {
   display: flex;
   align-items: center;
@@ -277,7 +284,7 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0 8px;
-  padding: 14px 16px 10px;
+  padding: 12px 16px;
   font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
@@ -289,17 +296,36 @@
 .dayDate {
   font-size: 14px;
   font-weight: 400;
-  color: var(--text-muted);
 }
 
-.dayHeadingToday,
-.dayHeadingToday .dayDate { color: var(--accent); }
+.dayHeading .todayTag {
+  margin-left: auto;
+  color: inherit;
+}
 
-.dayHeading .todayTag { margin-left: auto; }
+/* Today's card gets an accent ring; its Today tag is hidden in narrow columns. */
+.dayCardToday {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* One colour per weekday, from the style palette, the same in both themes.
+   Text is the palette's cream on the dark ones and its charcoal on the light
+   ones: 4.99:1 or better everywhere (see PHASE-LOG). */
+.dayHeading[data-weekday='0'] { background: #4e6081; color: #fff7e3; } /* Monday: blue */
+.dayHeading[data-weekday='1'] { background: #97a887; color: #333333; } /* Tuesday: sage */
+.dayHeading[data-weekday='2'] { background: #bb9f88; color: #333333; } /* Wednesday: sand */
+.dayHeading[data-weekday='3'] { background: #414a5a; color: #fff7e3; } /* Thursday: slate */
+.dayHeading[data-weekday='4'] { background: #cbd0b5; color: #333333; } /* Friday: pale sage */
+.dayHeading[data-weekday='5'] { background: #67472c; color: #fff7e3; } /* Saturday: brown */
+.dayHeading[data-weekday='6'] { background: #656e5d; color: #fff7e3; } /* Sunday: olive */
 
 .slotList { list-style: none; }
 
 .slotItem { border-top: 1px solid var(--border); }
+
+/* The coloured heading already separates the first slot. */
+.slotItem:first-child { border-top: none; }
 
 .slotRow {
   width: 100%;

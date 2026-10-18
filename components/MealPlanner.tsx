@@ -17,7 +17,8 @@ import {
   isSameMonth,
   monthGridDates,
   stepDate,
-  weekDates,
+  sevenDayDates,
+  weekdayIndex,
   type MealSlot,
   type PlannerView,
 } from '@/lib/mealPlan'
@@ -73,8 +74,8 @@ function optimisticMeal(input: MealInput): Meal {
   }
 }
 
-const VIEW_LABELS: Record<PlannerView, string> = { day: 'Day', week: 'Week', month: 'Month' }
-const STEP_UNIT: Record<PlannerView, string> = { day: 'day', week: 'week', month: 'month' }
+const VIEW_LABELS: Record<PlannerView, string> = { day: 'Day', days: '7 days', week: 'Week', month: 'Month' }
+const STEP_UNIT: Record<PlannerView, string> = { day: 'day', days: '7 days', week: 'week', month: 'month' }
 const WEEKDAY_HEADINGS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 function mealKey(date: string, slot: MealSlot) {
@@ -257,9 +258,9 @@ export default function MealPlanner({ view, date, today, meals, myRecipes, loadE
           {view === 'day' && (
             <DayView date={date} mealFor={mealFor} onOpenSlot={onOpenSlot} />
           )}
-          {view === 'week' && (
+          {(view === 'week' || view === 'days') && (
             <WeekView
-              date={date}
+              dates={sevenDayDates(view, date)}
               today={today}
               mealFor={mealFor}
               onOpenSlot={onOpenSlot}
@@ -331,18 +332,20 @@ function DayView({ date, mealFor, onOpenSlot }: ViewProps) {
 
 // ─── Week ────────────────────────────────────────────────────────────────────
 
-function WeekView({ date, today, mealFor, onOpenSlot }: ViewProps & { today: string }) {
+/** Week (Monday to Sunday) and 7 days (from any day) look the same: a card per day. */
+function WeekView({ dates, today, mealFor, onOpenSlot }: Omit<ViewProps, 'date'> & { dates: string[]; today: string }) {
   return (
     <div className={styles.week}>
-      {weekDates(date).map(d => {
+      {dates.map(d => {
         const isToday = d === today
         return (
           <Reveal key={d} className={styles.weekItem}>
             <section
-              className={`${styles.dayCard} raised`}
+              className={`${styles.dayCard} ${isToday ? styles.dayCardToday : ''} raised`}
               aria-label={formatDayLong(d) + (isToday ? ', today' : '')}
             >
-              <h4 className={`${styles.dayHeading} ${isToday ? styles.dayHeadingToday : ''}`}>
+              {/* Each weekday has its own colour, the same in every week. */}
+              <h4 className={styles.dayHeading} data-weekday={weekdayIndex(d)}>
                 <span className={styles.weekdayLong}>{formatWeekday(d)}</span>
                 <span className={styles.weekdayShort}>{formatWeekdayShort(d)}</span>
                 <span className={styles.dayDate}>{formatDayMonthShort(d)}</span>
