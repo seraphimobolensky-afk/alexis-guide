@@ -648,3 +648,15 @@ Rebuilt and re-linted clean after both changes.
 - Checked in headless Chrome at 360px light, 390px dark and 1280px light: both pills on one row, no horizontal scroll.
 
 **Files touched:** `app/guide/grocery-list/page.tsx`, `app/guide/grocery-list/groceryList.module.css`, `components/PageLinkButton.module.css`, `PHASE-LOG.md`
+
+---
+
+## Phase 14.4 — Grocery list buttons stacked
+**Date:** 2026-10-18
+
+**What changed:**
+- "Tips for planning groceries →" and "Meal planner →" are now stacked, left-aligned with 12px between them, instead of sharing a row.
+- Removed the narrow-phone padding tweak from Phase 14.3 (it only existed to fit both on one row), so the pills are the same size everywhere.
+- Checked in headless Chrome at 360px light, 390px dark and 1280px light: stacked, no horizontal scroll.
+
+**Files touched:** `app/guide/grocery-list/groceryList.module.css`, `components/PageLinkButton.module.css`, `PHASE-LOG.md`

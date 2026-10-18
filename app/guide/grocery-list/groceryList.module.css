@@ -1,17 +1,9 @@
 .links {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  margin-bottom: 12px;
-}
-
-/* The page-link button stays on the right, even when it wraps onto its own line. */
-.links > :last-child { margin-left: auto; }
-
-@media (max-width: 389px) {
-  .links { column-gap: 8px; }
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .loadError {
