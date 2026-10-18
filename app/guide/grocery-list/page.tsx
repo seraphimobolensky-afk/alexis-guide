@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import SectionHeader from '@/components/SectionHeader'
 import GroceryList from '@/components/GroceryList'
 import PageLinkButton from '@/components/PageLinkButton'
@@ -17,9 +16,7 @@ export default async function GroceryListPage() {
         subtitle="Type what you need — it sorts itself into aisles. Tap an item once it’s in the basket."
       />
       <div className={styles.links}>
-        <Link href="/guide/groceries" className={styles.tipsLink}>
-          Tips for planning groceries →
-        </Link>
+        <PageLinkButton href="/guide/groceries">Tips for planning groceries →</PageLinkButton>
         <PageLinkButton href="/guide/meal-planner">Meal planner →</PageLinkButton>
       </div>
       {loadError ? (

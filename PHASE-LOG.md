@@ -636,3 +636,15 @@ Rebuilt and re-linted clean after both changes.
 - Checked in headless Chrome at 360px light, 390px dark and 1280px light on both pages: correct links, 40px tall, no horizontal scroll.
 
 **Files touched:** `components/PageLinkButton.tsx` + `.module.css` (new), `app/guide/grocery-list/page.tsx`, `app/guide/grocery-list/groceryList.module.css`, `app/guide/meal-planner/page.tsx`, `app/guide/meal-planner/mealPlannerPage.module.css` (new), `PHASE-LOG.md`
+
+---
+
+## Phase 14.3 — "Tips for planning groceries" as a button too
+**Date:** 2026-10-18
+
+**What changed:**
+- The grocery list's "Tips for planning groceries →" link now uses the same `PageLinkButton` pill as "Meal planner →". The old `.tipsLink` text-link style is removed.
+- On phones narrower than 390px, the pill's side padding and the gap between the two are slightly tighter, so both fit on one row at 360px (they used to wrap into a staggered layout).
+- Checked in headless Chrome at 360px light, 390px dark and 1280px light: both pills on one row, no horizontal scroll.
+
+**Files touched:** `app/guide/grocery-list/page.tsx`, `app/guide/grocery-list/groceryList.module.css`, `components/PageLinkButton.module.css`, `PHASE-LOG.md`

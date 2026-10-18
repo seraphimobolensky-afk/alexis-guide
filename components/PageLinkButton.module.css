@@ -16,3 +16,8 @@
 }
 
 .button:active { box-shadow: var(--shadow-pressed-sm); }
+
+/* Small phones: a little tighter, so two of these fit side by side on 360px. */
+@media (max-width: 389px) {
+  .button { padding: 8px 12px; }
+}
