@@ -2,6 +2,7 @@
 import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import type { Meal } from '@/app/guide/meal-planner/data'
+import { copyMeal, deleteMeal, saveMeal, type MealInput } from '@/app/actions'
 import {
   MEAL_SLOTS,
   MEAL_SLOT_LABELS,
@@ -19,6 +20,7 @@ import {
   type MealSlot,
   type PlannerView,
 } from '@/lib/mealPlan'
+import MealCard, { type CopyResult, type SaveResult } from './MealCard'
 import Reveal from './Reveal'
 import styles from './MealPlanner.module.css'
 
@@ -31,7 +33,39 @@ interface Props {
   loadError?: boolean
 }
 
-type OpenSlot = (date: string, slot: MealSlot) => void
+type OpenSlot = (date: string, slot: MealSlot, trigger: HTMLElement) => void
+
+type MealAction =
+  | { type: 'save'; meal: Meal }
+  | { type: 'remove'; date: string; slot: MealSlot }
+
+function applyMealAction(meals: Meal[], action: MealAction): Meal[] {
+  const date = action.type === 'save' ? action.meal.planDate : action.date
+  const slot = action.type === 'save' ? action.meal.slot : action.slot
+  const others = meals.filter(m => !(m.planDate === date && m.slot === slot))
+  return action.type === 'save' ? [...others, action.meal] : others
+}
+
+/** What a save will look like once it lands, so the calendar can show it straight away. */
+function optimisticMeal(input: MealInput): Meal {
+  const temp = `temp-${Date.now()}-${Math.random()}`
+  return {
+    id: input.id ?? temp,
+    planDate: input.date,
+    slot: input.slot,
+    name: input.name,
+    notes: input.notes,
+    recipeKey: input.recipeKey,
+    ingredients: input.ingredients.map((i, index) => ({
+      id: i.id ?? `${temp}-${index}`,
+      name: i.name,
+      quantity: i.quantity,
+      addToGroceries: i.addToGroceries,
+      groceryItemId: null,
+      sortOrder: index,
+    })),
+  }
+}
 
 const VIEW_LABELS: Record<PlannerView, string> = { day: 'Day', week: 'Week', month: 'Month' }
 const STEP_UNIT: Record<PlannerView, string> = { day: 'day', week: 'week', month: 'month' }
@@ -53,9 +87,15 @@ export default function MealPlanner({ view, date, today, meals, loadError }: Pro
   // The toggle and title move straight away; the calendar itself stays on
   // the last loaded range (dimmed) until the new one arrives from the server.
   const [shown, setShown] = useOptimistic({ view, date })
-  const [selected, setSelected] = useState<{ date: string; slot: MealSlot } | null>(null)
+  const [optimisticMeals, applyOptimistic] = useOptimistic(meals, applyMealAction)
+  const [, startSave] = useTransition()
+  const [open, setOpen] = useState<{ date: string; slot: MealSlot; trigger: HTMLElement } | null>(null)
+  const [error, setError] = useState('')
 
-  const mealsBySlot = useMemo(() => new Map(meals.map(m => [mealKey(m.planDate, m.slot), m])), [meals])
+  const mealsBySlot = useMemo(
+    () => new Map(optimisticMeals.map(m => [mealKey(m.planDate, m.slot), m])),
+    [optimisticMeals]
+  )
   const mealFor = (d: string, slot: MealSlot) => mealsBySlot.get(mealKey(d, slot))
 
   function go(next: { view: PlannerView; date: string }) {
@@ -65,9 +105,67 @@ export default function MealPlanner({ view, date, today, meals, loadError }: Pro
     })
   }
 
-  // Wired to the meal card in the next phase; for now it just marks the slot.
-  const onOpenSlot: OpenSlot = (d, slot) => setSelected({ date: d, slot })
-  const isSelected = (d: string, slot: MealSlot) => selected?.date === d && selected.slot === slot
+  const onOpenSlot: OpenSlot = (d, slot, trigger) => setOpen({ date: d, slot, trigger })
+
+  /** Focus goes back to the slot that opened the card (or its day, if that slot's button is gone). */
+  function handleCardClosed() {
+    const closed = open
+    setOpen(null)
+    if (!closed) return
+    requestAnimationFrame(() => {
+      const target = closed.trigger.isConnected
+        ? closed.trigger
+        : document.querySelector<HTMLElement>(`[data-slot-key="${mealKey(closed.date, closed.slot)}"]`) ??
+          document.querySelector<HTMLElement>(`[data-day-key="${closed.date}"]`)
+      target?.focus()
+    })
+  }
+
+  /**
+   * Save with an optimistic update, like the grocery list: the dish shows in
+   * its slot straight away, and if the save fails it rolls back and we say why.
+   */
+  function handleSave(input: MealInput): Promise<SaveResult> {
+    setError('')
+    return new Promise(resolve => {
+      startSave(async () => {
+        applyOptimistic({ type: 'save', meal: optimisticMeal(input) })
+        try {
+          const res = await saveMeal(input)
+          if (res.error) setError(`Couldn’t save “${input.name}”, so it was taken off the plan again. (${res.error})`)
+          resolve(res)
+        } catch {
+          setError(`Couldn’t save “${input.name}”. The save didn’t go through — try again.`)
+          resolve({ error: 'The save didn’t go through' })
+        }
+      })
+    })
+  }
+
+  function handleDelete(meal: { id: string; date: string; slot: MealSlot; name: string }) {
+    setError('')
+    startSave(async () => {
+      applyOptimistic({ type: 'remove', date: meal.date, slot: meal.slot })
+      try {
+        const res = await deleteMeal(meal.id)
+        if (res.error) setError(`Couldn’t delete “${meal.name}”, so it was put back. (${res.error})`)
+      } catch {
+        setError(`Couldn’t delete “${meal.name}”. The connection dropped — try again.`)
+      }
+    })
+  }
+
+  function handleCopy(input: { fromId: string; toDate: string; toSlot: MealSlot; replace: boolean }): Promise<CopyResult> {
+    return new Promise(resolve => {
+      startSave(async () => {
+        try {
+          resolve(await copyMeal(input))
+        } catch {
+          resolve({ error: 'The connection dropped' })
+        }
+      })
+    })
+  }
 
   return (
     <div className={styles.root}>
@@ -119,6 +217,29 @@ export default function MealPlanner({ view, date, today, meals, loadError }: Pro
         </div>
       </div>
 
+      {error && (
+        <div role="alert" className={styles.error}>
+          <span>{error}</span>
+          <button type="button" onClick={() => setError('')} className={styles.errorDismiss} aria-label="Dismiss">
+            ✕
+          </button>
+        </div>
+      )}
+
+      {open && (
+        <MealCard
+          key={mealKey(open.date, open.slot)}
+          date={open.date}
+          slot={open.slot}
+          today={today}
+          meal={mealFor(open.date, open.slot)}
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onCopy={handleCopy}
+          onClosed={handleCardClosed}
+        />
+      )}
+
       {loadError ? (
         <p className={styles.loadError}>
           Couldn’t load your meal plan right now. Try reloading the page in a moment.
@@ -126,7 +247,7 @@ export default function MealPlanner({ view, date, today, meals, loadError }: Pro
       ) : (
         <div className={`${styles.calendar} ${isPending ? styles.calendarPending : ''}`} aria-busy={isPending}>
           {view === 'day' && (
-            <DayView date={date} mealFor={mealFor} onOpenSlot={onOpenSlot} isSelected={isSelected} />
+            <DayView date={date} mealFor={mealFor} onOpenSlot={onOpenSlot} />
           )}
           {view === 'week' && (
             <WeekView
@@ -134,7 +255,6 @@ export default function MealPlanner({ view, date, today, meals, loadError }: Pro
               today={today}
               mealFor={mealFor}
               onOpenSlot={onOpenSlot}
-              isSelected={isSelected}
             />
           )}
           {view === 'month' && (
@@ -144,7 +264,6 @@ export default function MealPlanner({ view, date, today, meals, loadError }: Pro
               mealFor={mealFor}
               onOpenSlot={onOpenSlot}
               onOpenDay={d => go({ view: 'day', date: d })}
-              isSelected={isSelected}
             />
           )}
         </div>
@@ -157,22 +276,22 @@ interface ViewProps {
   date: string
   mealFor: (date: string, slot: MealSlot) => Meal | undefined
   onOpenSlot: OpenSlot
-  isSelected: (date: string, slot: MealSlot) => boolean
 }
 
 // ─── Day ─────────────────────────────────────────────────────────────────────
 
-function DayView({ date, mealFor, onOpenSlot, isSelected }: ViewProps) {
+function DayView({ date, mealFor, onOpenSlot }: ViewProps) {
   return (
     <div className={styles.dayList}>
       {MEAL_SLOTS.map(slot => {
         const meal = mealFor(date, slot)
         return (
           <Reveal key={slot}>
-            <div className={`${styles.mealCard} ${isSelected(date, slot) ? 'pressed' : 'raised'}`}>
+            <div className={`${styles.mealCard} raised`}>
               <button
                 type="button"
-                onClick={() => onOpenSlot(date, slot)}
+                onClick={e => onOpenSlot(date, slot, e.currentTarget)}
+                data-slot-key={mealKey(date, slot)}
                 aria-label={slotLabel(date, slot, meal)}
                 className={styles.mealCardButton}
               >
@@ -204,7 +323,7 @@ function DayView({ date, mealFor, onOpenSlot, isSelected }: ViewProps) {
 
 // ─── Week ────────────────────────────────────────────────────────────────────
 
-function WeekView({ date, today, mealFor, onOpenSlot, isSelected }: ViewProps & { today: string }) {
+function WeekView({ date, today, mealFor, onOpenSlot }: ViewProps & { today: string }) {
   return (
     <div className={styles.week}>
       {weekDates(date).map(d => {
@@ -228,9 +347,10 @@ function WeekView({ date, today, mealFor, onOpenSlot, isSelected }: ViewProps & 
                     <li key={slot} className={styles.slotItem}>
                       <button
                         type="button"
-                        onClick={() => onOpenSlot(d, slot)}
+                        onClick={e => onOpenSlot(d, slot, e.currentTarget)}
+                        data-slot-key={mealKey(d, slot)}
                         aria-label={slotLabel(d, slot, meal)}
-                        className={`${styles.slotRow} ${isSelected(d, slot) ? styles.slotSelected + ' pressed-sm' : ''}`}
+                        className={styles.slotRow}
                       >
                         <span className={styles.slotLabel}>{MEAL_SLOT_LABELS[slot]}</span>
                         {meal ? (
@@ -259,7 +379,6 @@ function MonthView({
   mealFor,
   onOpenSlot,
   onOpenDay,
-  isSelected,
 }: ViewProps & { today: string; onOpenDay: (date: string) => void }) {
   return (
     <div className={styles.monthWrap}>
@@ -282,6 +401,7 @@ function MonthView({
                 <button
                   type="button"
                   onClick={() => onOpenDay(d)}
+                  data-day-key={d}
                   aria-label={`${formatDayLong(d)}${isToday ? ', today' : ''}: ${
                     summary.length ? summary.join(', ') : 'nothing planned'
                   }`}
@@ -303,9 +423,10 @@ function MonthView({
                       <button
                         key={slot}
                         type="button"
-                        onClick={() => onOpenSlot(d, slot)}
+                        onClick={e => onOpenSlot(d, slot, e.currentTarget)}
+                        data-slot-key={mealKey(d, slot)}
                         aria-label={slotLabel(d, slot, meal)}
-                        className={`${styles.cellMeal} ${isSelected(d, slot) ? styles.cellMealSelected : ''}`}
+                        className={styles.cellMeal}
                       >
                         {meal.name}
                       </button>

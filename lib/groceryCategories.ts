@@ -175,19 +175,21 @@ export function categorizeGrocery(name: string, overrides?: Record<string, strin
 }
 
 const UNIT = '(?:kg|g|gr|mg|l|ml|cl|lb|lbs|oz|x|pcs?|packs?|packets?|bottles?|cans?|tins?|jars?|bags?|boxes|box|dozen)'
+/** A number, or a range of two ("3-5"). */
+const NUMBER = '\\d+(?:[.,]\\d+)?(?:\\s*[-–]\\s*\\d+(?:[.,]\\d+)?)?'
 
 /**
- * Loose "quantity + name" parsing. Handles a number (with optional unit) at the
- * start or end, or anything in brackets at the end: "2 kg rice", "2x milk",
- * "3 apples", "eggs x20", "milk 2l", "rice (2kg)".
- * Anything it doesn't recognise is just the name, with no quantity.
+ * Loose "quantity + name" parsing. Handles a number or range (with optional
+ * unit) at the start, a number at the end, or anything in brackets at the end:
+ * "2 kg rice", "2x milk", "3 apples", "3-5 eggs", "eggs x20", "milk 2l",
+ * "rice (2kg)". Anything it doesn't recognise is just the name, with no quantity.
  */
 export function parseGroceryInput(raw: string): { name: string; quantity: string | null } {
   const text = raw.trim().replace(/\s+/g, ' ')
   const bracketed = text.match(/^(.+?)\s*\(([^()]+)\)$/)
   if (bracketed) return { name: bracketed[1].trim(), quantity: bracketed[2].trim() }
 
-  const leading = text.match(new RegExp(`^(\\d+(?:[.,]\\d+)?\\s*${UNIT}?)\\s+(.+)$`, 'i'))
+  const leading = text.match(new RegExp(`^(${NUMBER}\\s*${UNIT}?)\\s+(.+)$`, 'i'))
   if (leading) return { name: leading[2].trim(), quantity: leading[1].replace(/\s+/g, ' ').trim() }
 
   const trailing = text.match(new RegExp(`^(.+?)\\s+(x\\s*\\d+|\\d+(?:[.,]\\d+)?\\s*${UNIT}?)$`, 'i'))

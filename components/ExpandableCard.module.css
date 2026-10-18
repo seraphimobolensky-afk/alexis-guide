@@ -1,4 +1,6 @@
 .card {
+  /* Clears the sticky nav when a link scrolls a card into view. */
+  scroll-margin-top: calc(96px + env(safe-area-inset-top));
   background: var(--bg);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-raised);

@@ -47,24 +47,42 @@ export async function getMealPlannerData(start: string, end: string): Promise<Me
     return { meals: [], loadError: [error.code, error.message].filter(Boolean).join(' — ') }
   }
 
+  return { meals: (data ?? []).filter(m => isMealSlot(m.slot)).map(toMeal) }
+}
+
+interface MealRow {
+  id: string
+  plan_date: string
+  slot: string
+  name: string
+  notes: string | null
+  recipe_key: string | null
+  meal_ingredients: {
+    id: string
+    name: string
+    quantity: string | null
+    add_to_groceries: boolean
+    grocery_item_id: string | null
+    sort_order: number
+  }[] | null
+}
+
+/** A `meal_plans` row with its embedded `meal_ingredients` → a Meal. */
+export function toMeal(m: MealRow): Meal {
   return {
-    meals: (data ?? [])
-      .filter(m => isMealSlot(m.slot))
-      .map(m => ({
-        id: m.id,
-        planDate: m.plan_date,
-        slot: m.slot as MealSlot,
-        name: m.name,
-        notes: m.notes,
-        recipeKey: m.recipe_key,
-        ingredients: (m.meal_ingredients ?? []).map(i => ({
-          id: i.id,
-          name: i.name,
-          quantity: i.quantity,
-          addToGroceries: i.add_to_groceries,
-          groceryItemId: i.grocery_item_id,
-          sortOrder: i.sort_order,
-        })),
-      })),
+    id: m.id,
+    planDate: m.plan_date,
+    slot: m.slot as MealSlot,
+    name: m.name,
+    notes: m.notes,
+    recipeKey: m.recipe_key,
+    ingredients: (m.meal_ingredients ?? []).map(i => ({
+      id: i.id,
+      name: i.name,
+      quantity: i.quantity,
+      addToGroceries: i.add_to_groceries,
+      groceryItemId: i.grocery_item_id,
+      sortOrder: i.sort_order,
+    })),
   }
 }

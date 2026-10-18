@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { todayDateString, type Cadence } from '@/lib/habits'
 import type { HabitColor } from '@/lib/habitColors'
 import { isGroceryCategory, normalizeGroceryName, type GroceryCategory } from '@/lib/groceryCategories'
+import { isDateString, isMealSlot, todayInLondon, type MealSlot } from '@/lib/mealPlan'
+import { toMeal, type Meal } from '@/app/guide/meal-planner/data'
 
 async function requireUser() {
   const supabase = await createClient()
@@ -241,4 +243,222 @@ export async function removeGroceryItem(itemId: string) {
 
   revalidatePath('/guide/grocery-list')
   return { error: error?.message }
+}
+
+// ─── Meal planner ───────────────────────────────────────────────────────────
+
+export interface MealIngredientInput {
+  id?: string
+  name: string
+  quantity: string | null
+  addToGroceries: boolean
+  sortOrder: number
+}
+
+export interface MealInput {
+  id?: string
+  date: string
+  slot: MealSlot
+  name: string
+  notes: string | null
+  recipeKey: string | null
+  ingredients: MealIngredientInput[]
+}
+
+const MEAL_COLUMNS =
+  'id, plan_date, slot, name, notes, recipe_key, meal_ingredients(id, name, quantity, add_to_groceries, grocery_item_id, sort_order)'
+
+/**
+ * Save a meal into its day and slot (one meal per slot, so it upserts on
+ * user + date + slot), then make its ingredient rows match the list given:
+ * rows with an id are updated, rows without one are inserted, and rows no
+ * longer in the list are deleted. Returns the saved meal with the ids of
+ * any new ingredients.
+ */
+export async function saveMeal(input: MealInput): Promise<{ meal?: Meal; error?: string }> {
+  const { supabase, user } = await requireUser()
+  const name = input.name.trim()
+  if (!isDateString(input.date) || !isMealSlot(input.slot)) return { error: 'Unknown day or meal' }
+  if (!name) return { error: 'The meal needs a name' }
+
+  const { data: meal, error } = await supabase
+    .from('meal_plans')
+    .upsert(
+      {
+        user_id: user.id,
+        plan_date: input.date,
+        slot: input.slot,
+        name,
+        notes: input.notes?.trim() || null,
+        recipe_key: input.recipeKey,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,plan_date,slot' }
+    )
+    .select('id')
+    .single()
+  if (error) return { error: error.message }
+
+  const { data: existing, error: existingError } = await supabase
+    .from('meal_ingredients')
+    .select('id')
+    .eq('meal_id', meal.id)
+    .eq('user_id', user.id)
+  if (existingError) return { error: existingError.message }
+
+  const existingIds = new Set((existing ?? []).map(r => r.id))
+  const rows = input.ingredients
+    .map(i => ({ ...i, name: i.name.trim(), quantity: i.quantity?.trim() || null }))
+    .filter(i => i.name)
+    .map((i, index) => ({
+      id: i.id && existingIds.has(i.id) ? i.id : null,
+      fields: {
+        meal_id: meal.id,
+        user_id: user.id,
+        name: i.name,
+        quantity: i.quantity,
+        add_to_groceries: i.addToGroceries,
+        sort_order: index,
+      },
+    }))
+  const keptIds = new Set(rows.map(r => r.id))
+  const removedIds = [...existingIds].filter(id => !keptIds.has(id))
+
+  if (removedIds.length > 0) {
+    const { error: deleteError } = await supabase
+      .from('meal_ingredients')
+      .delete()
+      .in('id', removedIds)
+      .eq('user_id', user.id)
+    if (deleteError) return { error: deleteError.message }
+  }
+
+  const updates = rows.filter(r => r.id).map(r => ({ id: r.id, ...r.fields }))
+  if (updates.length > 0) {
+    const { error: updateError } = await supabase.from('meal_ingredients').upsert(updates, { onConflict: 'id' })
+    if (updateError) return { error: updateError.message }
+  }
+
+  const inserts = rows.filter(r => !r.id).map(r => r.fields)
+  if (inserts.length > 0) {
+    const { error: insertError } = await supabase.from('meal_ingredients').insert(inserts)
+    if (insertError) return { error: insertError.message }
+  }
+
+  // Phase 14: grocery sync — add/update/remove the grocery rows linked to
+  // this meal's ingredients (ticked ones on the list, unticked and removed
+  // ones taken off), now that the ingredient rows match the card.
+
+  const saved = await loadMeal(supabase, user.id, meal.id)
+  revalidatePath('/guide/meal-planner')
+  return saved
+}
+
+export async function deleteMeal(id: string): Promise<{ error?: string }> {
+  const { supabase, user } = await requireUser()
+
+  // Phase 14: grocery sync — take this meal's linked quantities off the
+  // grocery list before its ingredient rows are deleted with it.
+
+  const { error } = await supabase
+    .from('meal_plans')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  revalidatePath('/guide/meal-planner')
+  return { error: error?.message }
+}
+
+/**
+ * Copy a saved meal (name, notes, recipe and ingredients) into another day
+ * and slot. If that slot already has a meal, nothing happens unless
+ * `replace` is true: the answer says which meal is in the way, so the card
+ * can ask first. Ingredients copied onto a past date come in unticked.
+ */
+export async function copyMeal(input: {
+  fromId: string
+  toDate: string
+  toSlot: MealSlot
+  replace: boolean
+}): Promise<{ error?: string; conflict?: { name: string } }> {
+  const { supabase, user } = await requireUser()
+  if (!isDateString(input.toDate) || !isMealSlot(input.toSlot)) return { error: 'Unknown day or meal' }
+
+  const source = await loadMeal(supabase, user.id, input.fromId)
+  if (source.error || !source.meal) return { error: source.error ?? 'Meal not found' }
+  if (source.meal.planDate === input.toDate && source.meal.slot === input.toSlot) {
+    return { error: 'That’s this meal’s own slot' }
+  }
+
+  const { data: target, error: targetError } = await supabase
+    .from('meal_plans')
+    .select('id, name')
+    .eq('user_id', user.id)
+    .eq('plan_date', input.toDate)
+    .eq('slot', input.toSlot)
+    .maybeSingle()
+  if (targetError) return { error: targetError.message }
+
+  if (target) {
+    if (!input.replace) return { conflict: { name: target.name } }
+    // Phase 14: grocery sync — the replaced meal's linked quantities come
+    // off the grocery list here, as in deleteMeal.
+    const { error: deleteError } = await supabase
+      .from('meal_plans')
+      .delete()
+      .eq('id', target.id)
+      .eq('user_id', user.id)
+    if (deleteError) return { error: deleteError.message }
+  }
+
+  const { data: copy, error: copyError } = await supabase
+    .from('meal_plans')
+    .insert({
+      user_id: user.id,
+      plan_date: input.toDate,
+      slot: input.toSlot,
+      name: source.meal.name,
+      notes: source.meal.notes,
+      recipe_key: source.meal.recipeKey,
+    })
+    .select('id')
+    .single()
+  if (copyError) return { error: copyError.message }
+
+  const isPast = input.toDate < todayInLondon()
+  if (source.meal.ingredients.length > 0) {
+    const { error: ingredientsError } = await supabase.from('meal_ingredients').insert(
+      source.meal.ingredients.map((i, index) => ({
+        meal_id: copy.id,
+        user_id: user.id,
+        name: i.name,
+        quantity: i.quantity,
+        add_to_groceries: isPast ? false : i.addToGroceries,
+        sort_order: index,
+      }))
+    )
+    if (ingredientsError) return { error: ingredientsError.message }
+  }
+
+  // Phase 14: grocery sync — put the copy's ticked ingredients on the list.
+
+  revalidatePath('/guide/meal-planner')
+  return {}
+}
+
+async function loadMeal(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  id: string
+): Promise<{ meal?: Meal; error?: string }> {
+  const { data, error } = await supabase
+    .from('meal_plans')
+    .select(MEAL_COLUMNS)
+    .eq('id', id)
+    .eq('user_id', userId)
+    .order('sort_order', { referencedTable: 'meal_ingredients', ascending: true })
+    .single()
+  if (error) return { error: error.message }
+  return { meal: toMeal(data) }
 }

@@ -1,8 +1,11 @@
 'use client'
 import { useCallback, useState } from 'react'
 
-export function useExpandableGroup(ids: string[]) {
-  const [open, setOpen] = useState<Record<string, boolean>>({})
+/** `initialOpen`: ids that start expanded (e.g. from a link to one card). */
+export function useExpandableGroup(ids: string[], initialOpen: string[] = []) {
+  const [open, setOpen] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(initialOpen.filter(id => ids.includes(id)).map(id => [id, true]))
+  )
 
   const isOpen = useCallback((id: string) => !!open[id], [open])
 

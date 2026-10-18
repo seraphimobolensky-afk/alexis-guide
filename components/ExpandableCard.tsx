@@ -4,6 +4,8 @@ import { useScrollReveal } from '@/lib/useScrollReveal'
 import styles from './ExpandableCard.module.css'
 
 interface ExpandableCardProps {
+  /** DOM id on the card, so a link can scroll to it. */
+  id?: string
   icon?: ReactNode
   title: ReactNode
   meta?: ReactNode
@@ -14,12 +16,12 @@ interface ExpandableCardProps {
   persistent?: ReactNode
 }
 
-export default function ExpandableCard({ icon, title, meta, open, onToggle, children, persistent }: ExpandableCardProps) {
+export default function ExpandableCard({ id, icon, title, meta, open, onToggle, children, persistent }: ExpandableCardProps) {
   const contentId = useId()
   const [revealTarget, revealClass] = useScrollReveal<HTMLDivElement>()
 
   return (
-    <div ref={revealTarget} className={`${styles.card} ${revealClass}`}>
+    <div ref={revealTarget} id={id} className={`${styles.card} ${revealClass}`}>
       <button
         type="button"
         className={styles.header}
