@@ -1,8 +1,19 @@
+.links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+
+/* The page-link button stays on the right, even when it wraps onto its own line. */
+.links > :last-child { margin-left: auto; }
+
 .tipsLink {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  margin-bottom: 12px;
   font-size: 14px;
   font-weight: 500;
   color: var(--accent);

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import SectionHeader from '@/components/SectionHeader'
 import GroceryList from '@/components/GroceryList'
+import PageLinkButton from '@/components/PageLinkButton'
 import { todayInLondon } from '@/lib/mealPlan'
 import { getGroceryPageData } from './data'
 import styles from './groceryList.module.css'
@@ -15,9 +16,12 @@ export default async function GroceryListPage() {
         title="Grocery list"
         subtitle="Type what you need — it sorts itself into aisles. Tap an item once it’s in the basket."
       />
-      <Link href="/guide/groceries" className={styles.tipsLink}>
-        Tips for planning groceries →
-      </Link>
+      <div className={styles.links}>
+        <Link href="/guide/groceries" className={styles.tipsLink}>
+          Tips for planning groceries →
+        </Link>
+        <PageLinkButton href="/guide/meal-planner">Meal planner →</PageLinkButton>
+      </div>
       {loadError ? (
         <p className={styles.loadError}>
           Couldn’t load your grocery list right now. Try reloading the page in a moment.

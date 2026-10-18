@@ -1,0 +1,18 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  background: var(--bg);
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  min-height: 40px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font);
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.button:active { box-shadow: var(--shadow-pressed-sm); }

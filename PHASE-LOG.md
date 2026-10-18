@@ -623,3 +623,16 @@ Rebuilt and re-linted clean after both changes.
 - Checked in headless Chrome at 820px light and 390px dark: the meal line sits on its own row with a 4px gap and the quantity is back on the right; no horizontal scroll.
 
 **Files touched:** `components/GroceryList.module.css`, `PHASE-LOG.md`
+
+---
+
+## Phase 14.2 — Buttons between the grocery list and the meal planner
+**Date:** 2026-10-18
+
+**What changed:**
+- New `components/PageLinkButton` (+ `.module.css`): a small raised pill link with accent text, styled like the planner's Today button.
+- **Grocery list:** "Meal planner →" on the right of the "Tips for planning groceries →" row. When the row wraps on narrow phones, the button stays on the right.
+- **Meal planner:** "Grocery list →" right-aligned between the header and the calendar toolbar.
+- Checked in headless Chrome at 360px light, 390px dark and 1280px light on both pages: correct links, 40px tall, no horizontal scroll.
+
+**Files touched:** `components/PageLinkButton.tsx` + `.module.css` (new), `app/guide/grocery-list/page.tsx`, `app/guide/grocery-list/groceryList.module.css`, `app/guide/meal-planner/page.tsx`, `app/guide/meal-planner/mealPlannerPage.module.css` (new), `PHASE-LOG.md`

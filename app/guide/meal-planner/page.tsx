@@ -1,7 +1,9 @@
 import SectionHeader from '@/components/SectionHeader'
 import MealPlanner from '@/components/MealPlanner'
+import PageLinkButton from '@/components/PageLinkButton'
 import { isDateString, isPlannerView, todayInLondon, visibleRange } from '@/lib/mealPlan'
 import { getMealPlannerData } from './data'
+import styles from './mealPlannerPage.module.css'
 
 export default async function MealPlannerPage({
   searchParams,
@@ -23,6 +25,9 @@ export default async function MealPlannerPage({
         title="Meal planner"
         subtitle="Plan breakfast, lunch and dinner for the days ahead."
       />
+      <div className={styles.links}>
+        <PageLinkButton href="/guide/grocery-list">Grocery list →</PageLinkButton>
+      </div>
       <MealPlanner view={view} date={date} today={today} meals={meals} loadError={Boolean(loadError)} />
     </div>
   )
