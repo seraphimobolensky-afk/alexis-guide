@@ -163,8 +163,11 @@
   flex-direction: column;
 }
 
-/* "For Mon dinner · Tue breakfast" under items a planned meal needs. */
+/* "For Mon dinner · Tue breakfast" under items a planned meal needs.
+   Its own line (block, not just via .itemText's column), with a little air above. */
 .forMeals {
+  display: block;
+  margin-top: 4px;
   font-size: 12px;
   color: var(--text-muted);
   line-height: 1.35;
@@ -172,6 +175,7 @@
 }
 
 .itemName {
+  display: block;
   flex: 1;
   min-width: 0;
   font-size: 16px;

@@ -611,3 +611,15 @@ Rebuilt and re-linted clean after both changes.
 - **Not checked:** the Supabase store against the real database, because there's no signed-in session here. Worth one real run-through: plan a meal, look at the grocery list, untick something, delete the meal.
 
 **Files touched:** `lib/mealGrocerySync.ts`, `lib/mealGroceryStore.ts`, `lib/mealGroceryRules.ts`, `scripts/check-meal-grocery-sync.ts`, `scripts/ts-resolve.mjs` (all new), `app/actions.ts`, `app/guide/meal-planner/data.ts`, `app/guide/grocery-list/{data.ts,page.tsx}`, `components/MealCard.tsx` + `.module.css`, `components/MealPlanner.tsx`, `components/GroceryList.tsx` + `.module.css`, `lib/mealPlan.ts`, `package.json` (a `check:meal-sync` script only, no new packages), `PHASE-LOG.md`
+
+---
+
+## Phase 14.1 — Room between a grocery item and its "For …" line
+**Date:** 2026-10-18
+
+**What changed:**
+- Reported: the "For Tomorrow breakfast" line ran straight on from the item name, on the same line. In a fresh browser it already sat on its own line, so the open page was most likely still using the stylesheet from before Phase 14 (the dev server had compiled the new styles). A full reload fixes that.
+- Made it sturdier and roomier anyway: the meal line and the name are now both blocks, so they stack even without the column layout, and the meal line has 4px of space above it.
+- Checked in headless Chrome at 820px light and 390px dark: the meal line sits on its own row with a 4px gap and the quantity is back on the right; no horizontal scroll.
+
+**Files touched:** `components/GroceryList.module.css`, `PHASE-LOG.md`
