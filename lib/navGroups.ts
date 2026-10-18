@@ -19,8 +19,8 @@ function sectionLink(key: string): NavLinkConfig {
 }
 
 /**
- * CardNav shows at most 3 groups. `habits` (Phase 8) and `grocery-list`
- * (Phase 9) aren't content sections, so they're plain links.
+ * CardNav shows at most 3 groups. `habits` (Phase 8), `grocery-list`
+ * (Phase 9) and `meal-planner` (Phase 12) aren't content sections, so they're plain links.
  */
 export const navGroups: NavGroupConfig[] = [
   {
@@ -37,6 +37,7 @@ export const navGroups: NavGroupConfig[] = [
     links: [
       sectionLink('groceries'),
       { key: 'grocery-list', label: 'Grocery list', href: '/guide/grocery-list' },
+      { key: 'meal-planner', label: 'Meal planner', href: '/guide/meal-planner' },
       sectionLink('recipes'),
     ],
   },

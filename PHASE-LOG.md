@@ -499,3 +499,29 @@ Rebuilt and re-linted clean after both changes.
 - The SQL wasn't test-run locally because there's no local Postgres. It has to be run in the Supabase SQL editor.
 
 **Files touched:** `supabase-schema.sql`, `README.md`, `PHASE-LOG.md`
+
+---
+
+## Phase 12 — Meal planner calendar (day / week / month)
+**Date:** 2026-10-18
+
+**What changed:**
+- New page **`/guide/meal-planner`** ("Meal planner" in the Food group of the nav, right after Grocery list). It sits under `app/guide/`, so the layout's sign-in and allowlist checks apply; a signed-out request redirects to `/login` (checked).
+- **`lib/mealPlan.ts`**: date helpers working only on `YYYY-MM-DD` strings and 12:00-UTC dates, so a date can never slip a day. `todayInLondon()` works out today for Europe/London with `Intl.DateTimeFormat` (Vercel runs in UTC). Also: start of week (Monday), add days/weeks/months (31 Jan + 1 month → 28/29 Feb), the 42-day month grid, the visible range per view, `en-GB` display formatting, and `MEAL_SLOTS` with labels. `todayDateString` in `lib/habits.ts` is untouched. Checked by hand with a Node script (London midnight across BST and GMT, the clock-change days, leap years, month/year-spanning week titles, invalid dates like 2026-02-30), run under four `TZ` settings (UTC, London, UTC+14, Los Angeles). All passed.
+- **`app/guide/meal-planner/data.ts`**: loads the user's `meal_plans` with their `meal_ingredients` (ordered by `sort_order`) for the visible range only. Errors are logged on the server, and the page shows a plain "try reloading" message (same style as the grocery list).
+- **State in the URL:** `?view=day|week|month&date=YYYY-MM-DD`, defaulting to week and today. Invalid values fall back to the defaults. Switching view, ‹ / › and Today use `router.replace` with no scroll jump. The toggle and title update straight away; the calendar dims until the new range has loaded.
+- **`components/MealPlanner.tsx` + `.module.css`**: toolbar (Day / Week / Month segmented buttons with `aria-pressed`, pressed for the active one and raised for the others, like the Habits pills; ‹ / › and Today; the range as the title). Today is shown in the accent colour in every view.
+  - **Day:** three raised cards. A planned slot shows the dish, the note in muted text and the ingredients with quantities. An empty slot shows "+ Add breakfast".
+  - **Week:** below 1024px, seven stacked day cards with a row per slot. From 1024px, a 7-column grid whose dish names wrap to two lines, then ellipsis. The "Today" tag is hidden in the narrow columns (it pushed that day's slots out of line), so the accent heading marks today there.
+  - **Month:** a Monday-first, six-week grid with days outside the month dimmed. Below 640px each day shows three dots (filled accent = planned, outline = empty), with a one-line legend under the grid. From 640px it shows up to three dish names instead. Tapping a day opens it in Day view; from 640px, tapping a dish name selects that slot instead.
+  - Every slot is a button labelled in full ("Monday 19 October, dinner: Bolognese" / "…: nothing planned"). Focus rings show everywhere, including on the day cards, whose whole surface is the button.
+  - `onOpenSlot(date, slot)` currently just marks the slot as selected (pressed). The next phase connects it to the meal card.
+- Only theme tokens, no hard-coded colours. Animations come from the existing list reveal and a short fade while loading, both switched off by the site-wide reduced-motion rule.
+
+**Checks:**
+- `npm run build` and `npm run lint`: 0 errors, 0 warnings.
+- Headless Chrome on a temporary sample-data page (outside `/guide`, set to 404 in production, and deleted before committing): all three views at 360, 390, 768 and 1280px in light and dark (24 combinations). No horizontal scrolling, nothing past the screen edge, and no overlapping or cut-off text. I reviewed the screenshots at 390 light, 360 dark, 768 light and 1280 light and dark. The one fix needed was the desktop Today column misalignment.
+- Interactions: view switching, ‹ / › (two quick taps go two steps), Today, reload and day-cell taps all keep the URL in step. Scroll position is kept, a dish name in month view selects that slot without leaving month view, Enter on a focused slot works, and an invalid `date` falls back to today. The empty and error states render correctly.
+- **Not checked:** the query against real Supabase data, because there's no signed-in session here. Worth opening the page once signed in.
+
+**Files touched:** `app/guide/meal-planner/{page.tsx,data.ts}` (new), `components/MealPlanner.tsx` + `.module.css` (new), `lib/mealPlan.ts` (new), `lib/navGroups.ts`, `PHASE-LOG.md`
