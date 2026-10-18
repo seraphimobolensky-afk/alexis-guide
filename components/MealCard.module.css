@@ -45,8 +45,12 @@
     inset: 0;
     margin: auto;
     width: calc(100% - 48px);
-    max-width: 520px;
-    max-height: min(calc(var(--vv-height, 100dvh) - 48px), 760px);
+    max-width: 640px;
+    /* A definite height rather than the dialog's default fit-content: Safari
+       sizes a fit-content column flexbox without its flexible body, which
+       squeezed the card to a sliver. Tall enough for a full recipe. */
+    height: min(calc(var(--vv-height, 100dvh) - 64px), 860px);
+    max-height: none;
     border-radius: var(--radius-card);
   }
 
@@ -93,7 +97,9 @@
 .closeButton:hover { color: var(--accent); }
 
 .body {
-  flex: 1;
+  /* auto, not 0%: starts at its content height and only shrinks (and
+     scrolls) when the card runs out of room. */
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;

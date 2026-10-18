@@ -555,3 +555,16 @@ Rebuilt and re-linted clean after both changes.
 - **Not checked:** the server actions against real Supabase data (successful save, ingredient update/insert/delete, delete, copy and its replace prompt), because there's no signed-in session here. Worth a run-through once signed in.
 
 **Files touched:** `components/MealCard.tsx` + `.module.css` (new), `lib/mealRecipes.ts` (new), `components/MealPlanner.tsx` + `.module.css`, `app/actions.ts`, `app/guide/meal-planner/data.ts`, `app/guide/recipes/page.tsx`, `components/ExpandableCard.tsx` + `.module.css`, `lib/useExpandableGroup.ts`, `lib/groceryCategories.ts`, `PHASE-LOG.md`
+
+---
+
+## Phase 13.1 — Bigger meal card on tablet and desktop
+**Date:** 2026-10-18
+
+**What changed:**
+- The meal card was squeezed to a sliver on desktop (reported from a real browser, most likely Safari): only the ingredient bar showed between the header and Done. The card was sized to its content (the dialog's default `fit-content`) while its scrolling body had `flex: 1`, a starting size of 0%. Chrome lays that out fine, but Safari can size the card without the body.
+- From 640px the card now has a definite, larger size: up to 640px wide (was 520) and `min(viewport − 64px, 860px)` tall, and the body fills it. A full recipe shows most of its ingredients without scrolling.
+- The body's flex basis is now `auto` everywhere, so the phone bottom sheet can't collapse the same way.
+- Checked in headless Chrome at 1388×820, 1280×600, 768×1024 and 390×844, with a full recipe and an empty card. **Not checked in Safari itself** (no WebKit available to automate here).
+
+**Files touched:** `components/MealCard.module.css`, `PHASE-LOG.md`
