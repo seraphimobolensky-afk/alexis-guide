@@ -1,5 +1,4 @@
 .links {
   display: flex;
-  justify-content: flex-end;
-  margin: -8px 0 16px;
+  margin-bottom: 16px;
 }

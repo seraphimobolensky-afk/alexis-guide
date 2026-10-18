@@ -187,6 +187,11 @@
   font-size: 14px;
   color: var(--text-muted);
   flex-shrink: 0;
+  /* Long recipe quantities ("around 2 cans per 500g beef") wrap instead of
+     squeezing the name into a one-word column. */
+  max-width: 40%;
+  text-align: right;
+  overflow-wrap: anywhere;
   font-variant-numeric: tabular-nums;
 }
 

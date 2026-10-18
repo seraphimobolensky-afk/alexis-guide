@@ -660,3 +660,45 @@ Rebuilt and re-linted clean after both changes.
 - Checked in headless Chrome at 360px light, 390px dark and 1280px light: stacked, no horizontal scroll.
 
 **Files touched:** `app/guide/grocery-list/groceryList.module.css`, `components/PageLinkButton.module.css`, `PHASE-LOG.md`
+
+---
+
+## Phase 15 — Meal planner: final check before going live
+**Date:** 2026-10-18
+
+**Checks and results:**
+1. **Build + lint:** both pass with 0 errors and 0 warnings. `npm run check:meal-sync`: 29 passed, 0 failed.
+2. **TypeScript:** no `any`, `@ts-ignore` or `@ts-expect-error` anywhere in `app/`, `components/`, `lib/` or `scripts/`.
+3. **Widths:** a headless-Chrome audit of the meal planner (Day, Week and Month views, plus the open meal card), the grocery list, `/guide/recipes?open=bolognese` and the Habits page (for comparison) at 360, 390, 768 and 1280px in both themes: 56 combinations. It used temporary sample-data routes, deleted afterwards. No horizontal scrolling, nothing past the screen edge, no overlapping or cut-off text, and no control without an accessible name.
+4. **Side-by-side review** of the screenshots against the grocery list and Habits pages: header spacing, card shadows and radii, pill buttons, uppercase labels and muted text all match. **Fixed:**
+   - A long recipe quantity on the grocery list ("around 2 cans per 500g beef") squeezed the item name into a one-word column. Quantities now wrap, at up to 40% of the row.
+   - The meal planner's "Grocery list →" button sat on the right while the grocery list's buttons sit on the left. It's now left-aligned with the same spacing.
+5. **Contrast (WCAG, need ≥ 4.5:1)**, worked out from the theme tokens:
+
+   | Text | Background | Light | Dark |
+   |---|---|---|---|
+   | Month dish names (from 640px), card labels, segment/chip text | bg | 5.61 | 6.59 |
+   | Month dates, range title, dish names, ingredient names | bg | 11.89 | 12.49 |
+   | ~~Outside-month dates (primary at opacity 0.4)~~ → text-muted | bg | ~~**2.24**~~ → 4.74 | ~~**3.24**~~ → 5.18 |
+   | ~~Outside-month dish names (secondary at opacity 0.4)~~ → text-muted | bg | ~~**1.78**~~ → 4.74 | ~~**2.23**~~ → 5.18 |
+   | Today (date ring, heading, TODAY tag) | bg | 5.12 | 5.81 |
+   | Weekday row, slot labels, "+ Add" | bg | 4.74 | 5.18 |
+   | Dot legend | bg | 4.74 | 5.18 |
+   | "For Mon dinner" line | bg | 4.74 | 5.18 |
+   | "not on list" / "bought" hints, quantities | bg | 4.74 | 5.18 |
+   | ~~"qty"/"name" placeholders (muted at opacity 0.7)~~ → text-muted, italic | bg | ~~**2.73**~~ → 4.74 | ~~**3.29**~~ → 5.18 |
+   | "Add again", "View recipe", link buttons, Done | bg | 5.12 | 5.81 |
+   | ~~Highlighted suggestion / hovered dish name (accent on hover tint)~~ → pressed shadow, plain bg | ~~bg + tint~~ → bg | ~~**4.28**~~ → 5.12 | ~~4.56~~ → 5.81 |
+   | ~~Hovered outside-month date, hovered qty, pressed slot (muted on tint)~~ → pressed shadow | ~~bg + tint~~ → bg | ~~**3.97**~~ → 4.74 | ~~**4.06**~~ → 5.18 |
+   | Copy error text, "Delete meal" | bg | 5.48 | 6.65 |
+   | bg (text) on danger (Remove, Delete and remove from list) | danger | 5.48 | 6.65 |
+   | bg (✓) on accent (ticked ingredient) | accent | 5.12 | 5.81 |
+
+   The hover and highlight states in the new UI now press in (`--shadow-pressed-sm`) instead of tinting the background, which matches the neumorphic style anyway. "Delete meal" on hover underlines instead of fading to 0.8 opacity. The calendar's brief dim (0.55) while a new range loads is a transient loading state, not resting text.
+6. **Keyboard and screen readers:** every control in the new UI is a native button, link or input with an accessible name (checked automatically on every audited page). The only click handlers on other elements are the recipe suggestions, which are `role="option"` in a combobox the keyboard reaches with ↑/↓ from the name field (keyboard-tested in Phase 13). Focus rings come from the global `:focus-visible` style.
+7. **Reduced motion:** with it emulated, opening the meal card runs no animations, and the Day/Week/Month buttons have no transitions in either setting. Without it, the card plays its 220ms slide-up.
+8. **Leftovers:** no temporary sample-data or audit routes remain, and there's no debug output. The only `console.log` calls are the check script's own output. The `console.warn` calls are the existing WebGL fallbacks, and `console.error` is the server-side load-failure logging.
+9. **Secrets:** `.env*` is git-ignored and has never been committed; no keys in the source.
+10. **README:** "What's in it" has a Meal planner entry (views, the meal card, the grocery link, the check script); the Supabase section mentions `origin` / `base_quantity`.
+
+**Files touched:** `components/MealPlanner.module.css`, `components/MealCard.module.css`, `components/GroceryList.module.css`, `app/guide/meal-planner/mealPlannerPage.module.css`, `README.md`, `PHASE-LOG.md`

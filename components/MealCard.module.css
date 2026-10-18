@@ -249,8 +249,10 @@
 
 .option:first-child { border-top: none; }
 
+/* Hover / keyboard highlight: pressed in, not tinted, so the text keeps its
+   contrast against the plain background. */
 .option:hover,
-.optionActive { background: var(--border); }
+.optionActive { box-shadow: var(--shadow-pressed-sm); }
 
 .optionActive .optionText { color: var(--accent); }
 
@@ -426,9 +428,9 @@
 }
 
 .inlineName:hover,
-.inlineQty:hover { background: var(--border); }
+.inlineQty:hover { box-shadow: var(--shadow-pressed-sm); }
 
-.placeholderText { color: var(--text-muted); opacity: 0.7; }
+.placeholderText { color: var(--text-muted); font-style: italic; }
 
 .inlineInput {
   min-width: 0;
@@ -512,7 +514,7 @@
   color: var(--danger);
 }
 
-.dangerText:hover { color: var(--danger); opacity: 0.8; }
+.dangerText:hover { color: var(--danger); text-decoration: underline; }
 
 .smallButton {
   background: var(--bg);

@@ -316,7 +316,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.slotRow:active { background: var(--border); }
+.slotRow:active { box-shadow: var(--shadow-pressed-sm); }
 .slotRow:focus-visible { outline-offset: -2px; }
 
 .slotLabel {
@@ -448,7 +448,10 @@
   min-width: 0;
 }
 
-.cellOutside { opacity: 0.4; }
+/* Days from the neighbouring months: muted text rather than transparency,
+   so their dates and dish names still meet 4.5:1. */
+.cellOutside .cellDate,
+.cellOutside .cellMeal { color: var(--text-muted); }
 
 .cellButton {
   width: 100%;
@@ -466,8 +469,9 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Pressed in rather than tinted, so muted dates keep 4.5:1 on hover. */
 .cellButton:hover,
-.cellButton:active { background: var(--border); }
+.cellButton:active { box-shadow: var(--shadow-pressed-sm); }
 
 .cellDate {
   width: 26px;
@@ -577,7 +581,7 @@
     cursor: pointer;
   }
 
-  .cellMeal:hover { color: var(--accent); background: var(--border); }
+  .cellMeal:hover { color: var(--accent); box-shadow: var(--shadow-pressed-sm); }
 
   .legend { display: none; }
 }
