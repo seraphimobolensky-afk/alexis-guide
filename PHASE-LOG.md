@@ -702,3 +702,16 @@ Rebuilt and re-linted clean after both changes.
 10. **README:** "What's in it" has a Meal planner entry (views, the meal card, the grocery link, the check script); the Supabase section mentions `origin` / `base_quantity`.
 
 **Files touched:** `components/MealPlanner.module.css`, `components/MealCard.module.css`, `components/GroceryList.module.css`, `app/guide/meal-planner/mealPlannerPage.module.css`, `README.md`, `PHASE-LOG.md`
+
+---
+
+## Phase 15.1 — Recipe suggestions can be tapped on phones
+**Date:** 2026-10-18
+
+**What changed:**
+- On a phone, tapping a recipe in the "What are you cooking?" suggestions showed it but didn't pick it. The option picked on `click`, and on phones the tap can blur the name field first: the list closes, the keyboard goes away and the card shifts, so the click never reaches the option.
+- Options now pick on pointer up. A touch pointer stays captured by the option it went down on, so the pick still happens even if the card moves. The field's blur no longer closes the list while an option is being pressed, and a press that turns into a scroll (`pointercancel`) picks nothing.
+- `click` still picks for screen readers and anything else that clicks without a pointer, but not a second time after a pointer pick.
+- Checked in headless Chrome on a temporary route (deleted again): a touch tap at 390px, a mouse click at 1280px, a screen-reader-style `click()` and ArrowDown + Enter each picked the recipe once and filled its ingredients, with no "replace ingredients?" prompt. Not checked on a real phone; headless Chrome has no on-screen keyboard to reproduce the shift.
+
+**Files touched:** `components/MealCard.tsx`, `PHASE-LOG.md`

@@ -118,6 +118,10 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
   const pointerDownOutside = useRef(false)
   /** Set when this component closes the dialog itself, vs. the browser closing it. */
   const closingOnPurpose = useRef(false)
+  /** The recipe option a finger or mouse went down on, until it comes up. */
+  const pressedOption = useRef<string | null>(null)
+  /** Set when pointer up picked a recipe, so the click that follows doesn't pick it again. */
+  const pickedOnPointerUp = useRef(false)
   const titleId = useId()
   const listboxId = useId()
 
@@ -302,6 +306,8 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
   // ─── Name + recipe suggestions ─────────────────────────────────────────────
 
   function handleNameChange(value: string) {
+    pressedOption.current = null
+    pickedOnPointerUp.current = false
     setNameMessage(false)
     setSuggestOpen(true)
     setActiveIndex(-1)
@@ -522,7 +528,10 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
             onChange={e => handleNameChange(e.target.value)}
             onKeyDown={handleNameKeyDown}
             onFocus={() => setSuggestOpen(true)}
-            onBlur={() => setSuggestOpen(false)}
+            onBlur={() => {
+              // A tap on an option can blur the field on phones; let the tap finish picking.
+              if (!pressedOption.current) setSuggestOpen(false)
+            }}
             placeholder="e.g. Bolognese"
             autoComplete="off"
             enterKeyHint="next"
@@ -548,9 +557,31 @@ export default function MealCard({ date, slot, today, meal, onSave, onDelete, on
                 id={`${listboxId}-${i}`}
                 role="option"
                 aria-selected={i === activeIndex}
-                // Keep focus in the field, so a tap doesn't blur and close the list first.
-                onPointerDown={e => e.preventDefault()}
-                onClick={() => pickRecipe(r)}
+                // Pick on pointer up rather than click: on phones the tap can blur the field and
+                // close the keyboard, shifting the card so the click lands somewhere else. A
+                // touch pointer stays captured by the option it went down on, so this still fires.
+                onPointerDown={e => {
+                  e.preventDefault()
+                  pressedOption.current = r.key
+                  pickedOnPointerUp.current = false
+                }}
+                onPointerUp={() => {
+                  const picked = pressedOption.current === r.key
+                  pressedOption.current = null
+                  if (!picked) return
+                  pickedOnPointerUp.current = true
+                  pickRecipe(r)
+                }}
+                onPointerCancel={() => {
+                  // The finger scrolled instead of tapping.
+                  pressedOption.current = null
+                  if (document.activeElement !== nameRef.current) setSuggestOpen(false)
+                }}
+                // Screen readers and anything else that clicks without a pointer.
+                onClick={() => {
+                  if (pickedOnPointerUp.current) pickedOnPointerUp.current = false
+                  else pickRecipe(r)
+                }}
                 className={`${styles.option} ${i === activeIndex ? styles.optionActive : ''}`}
               >
                 <span className={styles.optionEmoji} aria-hidden="true">{r.emoji}</span>
