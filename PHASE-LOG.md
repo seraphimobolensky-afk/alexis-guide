@@ -481,3 +481,21 @@ Rebuilt and re-linted clean after both changes.
 - Verified in headless Chrome (light + dark): the wordmark reads "SeraSays" in Bodoni Moda Italic (`document.fonts.check` true), and the tab title is "SeraSays".
 
 **Files touched:** `app/layout.tsx`, `app/manifest.ts`, `components/CardNav.tsx`, `components/CardNav.css`, `components/GuideNav.tsx`, `README.md`
+
+---
+
+## Phase 11 — Meal planner schema
+**Date:** 2026-10-18
+
+**What changed:**
+- Appended a `Meal planner` section to `supabase-schema.sql`. Additive only and safe to re-run; nothing existing is changed or dropped.
+- New table `meal_plans`: one meal per user, day and slot (breakfast / lunch / dinner), with a name, notes and an optional `recipe_key` pointing at a recipe in `lib/content.ts`. Index on `(user_id, plan_date)`.
+- New table `meal_ingredients`: a meal's ingredients, each optionally linked to a grocery list row (`grocery_item_id`, set to null if that row is deleted). Indexes on `meal_id` and `grocery_item_id`.
+- `grocery_items` gains `origin` (`'manual'` or `'planner'`, default `'manual'`) and `base_quantity` (the quantity Alexis typed himself). Existing manual rows are backfilled with `base_quantity = quantity`. The backfill skips rows that already have planner links, so re-running the file later can't copy a combined "6 + 2" quantity into `base_quantity`.
+- RLS on both new tables ("users manage their own rows", like the other tables) and `select, insert, update, delete` granted to `authenticated`.
+- A comment above the section explains the grocery link: a grocery row's shown quantity is always `base_quantity` plus every linked ingredient's quantity, joined with " + " and skipping blanks; a planner row with no links left is deleted unless it's been bought.
+- README's Supabase section lists the two new tables.
+- **Not done yet:** no app code uses these tables. `addGroceryItem` doesn't set `base_quantity` yet; the planner phase needs to change that.
+- The SQL wasn't test-run locally because there's no local Postgres. It has to be run in the Supabase SQL editor.
+
+**Files touched:** `supabase-schema.sql`, `README.md`, `PHASE-LOG.md`

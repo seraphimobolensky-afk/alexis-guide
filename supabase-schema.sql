@@ -149,3 +149,83 @@ create policy "Users manage their own grocery overrides"
   with check (auth.uid() = user_id);
 
 grant select, insert, update, delete on grocery_category_overrides to authenticated;
+
+-- ─── Meal planner ────────────────────────────────────────────────────────────
+-- How the grocery link works:
+-- A meal's ingredients can be sent to the grocery list. Each meal_ingredients
+-- row that does so points at one grocery_items row (grocery_item_id), and
+-- several ingredients can point at the same grocery row ("eggs" for two
+-- meals). A grocery row's displayed `quantity` is never edited directly by
+-- the planner: it is always recomputed as `base_quantity` (what Alexis typed
+-- himself) plus the quantities of every meal_ingredients row linked to it,
+-- joined with " + " and skipping blanks (e.g. "6 + 2 + 3"). Removing a meal
+-- or ingredient therefore takes its quantity back off again. A planner-made
+-- row (origin = 'planner') with no links left is deleted, as long as it
+-- hasn't been bought; a manual row is always kept.
+
+-- One meal per user, day and slot.
+create table if not exists meal_plans (
+  id          uuid default gen_random_uuid() primary key,
+  user_id     uuid references auth.users(id) on delete cascade not null,
+  plan_date   date not null,
+  slot        text not null check (slot in ('breakfast', 'lunch', 'dinner')),
+  name        text not null,
+  notes       text,
+  -- The `key` of a recipe in lib/content.ts, if the meal was picked from one.
+  recipe_key  text,
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now(),
+  unique(user_id, plan_date, slot)
+);
+
+alter table meal_plans enable row level security;
+
+drop policy if exists "Users manage their own meal plans" on meal_plans;
+create policy "Users manage their own meal plans"
+  on meal_plans
+  for all
+  using  (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create index if not exists meal_plans_user_date_idx on meal_plans(user_id, plan_date);
+
+create table if not exists meal_ingredients (
+  id                uuid default gen_random_uuid() primary key,
+  meal_id           uuid references meal_plans(id) on delete cascade not null,
+  user_id           uuid references auth.users(id) on delete cascade not null,
+  name              text not null,
+  quantity          text,
+  add_to_groceries  boolean not null default true,
+  grocery_item_id   uuid references grocery_items(id) on delete set null,
+  sort_order        integer not null default 0,
+  created_at        timestamptz default now()
+);
+
+alter table meal_ingredients enable row level security;
+
+drop policy if exists "Users manage their own meal ingredients" on meal_ingredients;
+create policy "Users manage their own meal ingredients"
+  on meal_ingredients
+  for all
+  using  (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create index if not exists meal_ingredients_meal_idx on meal_ingredients(meal_id);
+create index if not exists meal_ingredients_grocery_item_idx on meal_ingredients(grocery_item_id);
+
+-- Whether Alexis typed the item ('manual') or the planner created it ('planner').
+alter table grocery_items add column if not exists origin text not null default 'manual'
+  check (origin in ('manual', 'planner'));
+-- The quantity Alexis typed himself, kept apart from the planner's additions.
+alter table grocery_items add column if not exists base_quantity text;
+
+-- One-off backfill: existing manual items' quantity is all his own. Rows with
+-- planner links are skipped, so re-running this later can never copy a
+-- combined "6 + 2" quantity into base_quantity.
+update grocery_items set base_quantity = quantity
+  where base_quantity is null
+    and origin = 'manual'
+    and not exists (select 1 from meal_ingredients mi where mi.grocery_item_id = grocery_items.id);
+
+grant select, insert, update, delete on meal_plans       to authenticated;
+grant select, insert, update, delete on meal_ingredients to authenticated;

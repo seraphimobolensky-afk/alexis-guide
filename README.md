@@ -29,6 +29,7 @@ A personal guide to living alone, written by Sera for Alexis (the repo is still 
 2. **SQL Editor → New query**: paste all of `supabase-schema.sql` and run it. It's safe to re-run. It creates:
    - `habits`, `habit_entries`: habit tracking (the 11 cleaning tasks are added automatically for each user the first time they open the cleaning page)
    - `grocery_items`, `grocery_category_overrides`: the grocery list and remembered category moves
+   - `meal_plans`, `meal_ingredients`: the meal planner (one meal per day and slot, plus its ingredients, which can be linked to grocery list items)
    - `checklist_completions`: old, no longer used, kept so no data is lost
    - the row-level security policies and table grants for all of them
 3. **Authentication → Providers**: Email enabled.
